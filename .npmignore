@@ -1,0 +1,6 @@
+src
+static
+tsconfig.json
+nodemon.json
+.eslintignore
+.eslintrc

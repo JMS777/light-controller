@@ -1,21 +1,25 @@
 {
-  "name": "light-controller",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "@jms777/light-controller",
+  "version": "2.0.9",
+  "description": "Simple web service for controlling lights via a raspberry pi.",
+  "main": "dist/index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start:dev": "nodemon",
-    "build": "rimraf ./build && tsc",
-    "start": "npm run build && node build/index.js",
+    "dist": "rimraf ./dist && tsc && cp -r ./static/. ./dist",
+    "start": "npm run dist && node dist/index.js",
     "lint": "eslint . --ext .ts",
-    "lint-and-fix": "eslint . --ext .ts --fix"
+    "lint-and-fix": "eslint . --ext .ts --fix",
+    "prepublishOnly": "npm run dist"
   },
   "keywords": [],
   "author": "Jeremy Sapsed",
   "license": "ISC",
   "devDependencies": {
+    "@types/dotenv": "^8.2.0",
+    "@types/express": "^4.17.1",
     "@types/node": "^14.14.7",
+    "@types/shelljs": "^0.8.8",
     "@typescript-eslint/eslint-plugin": "^4.7.0",
     "@typescript-eslint/parser": "^4.7.0",
     "eslint": "^7.13.0",
@@ -23,5 +27,12 @@
     "rimraf": "^3.0.2",
     "ts-node": "^9.0.0",
     "typescript": "^4.0.5"
+  },
+  "dependencies": {
+    "body-parser": "^1.19.0",
+    "colorsys": "^1.0.22",
+    "dotenv": "^8.2.0",
+    "express": "^4.17.1",
+    "pigpio": "^3.2.4"
   }
 }
