@@ -26,7 +26,7 @@ export default class JsonDeviceManager implements IDeviceManager {
                 const device = DeviceFactory.Create(info.type, info.id, info.pins);
 
                 if (device) {
-                    device.onUpdate();
+                    device.updateChannels();
                     this.devices.push(device);
                 } else {
                     console.log(`Failed to create device from: ${info}`);

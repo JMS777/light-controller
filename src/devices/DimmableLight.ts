@@ -1,12 +1,45 @@
+import CancellationToken from "../helpers/CancellationToken";
 import { DeviceType } from "../helpers/DeviceType";
 import Light from "./Light";
 
 export default class DimmableLight extends Light {
     brightness = 100;
+    currentBrightness = 100;
     type: DeviceType = DeviceType.DimmableLight;
-    
+
+    private currentStateTask: Promise<void> | undefined;
+    private currentStateToken: CancellationToken | undefined;
+
+    private currentBrightnessTask: Promise<void> | undefined;
+    private currentBrightnessToken: CancellationToken | undefined;
+
     constructor(id: number, pin: number) {
         super(id, pin);
+    }
+
+    setState(state: boolean) {
+        this.state = state ? 1 : 0;
+
+        if (this.currentStateTask && this.currentStateToken) {
+            this.currentStateToken.cancel();
+        }
+
+        this.currentStateToken = new CancellationToken();
+        this.currentStateTask = this.setStateAsync(this.currentStateToken);
+    }
+
+    async setStateAsync(token: CancellationToken): Promise<void> {
+        var stateIncrement = (this.state - this.currentState) / 50;        
+
+        for (let i = 0; i < 50; i++) {
+            if (token.isCancellationRequested) {
+                break;
+            }
+
+            this.currentState = this.constrain(this.currentState + stateIncrement, 0, 1);
+            this.updateChannels();
+            await this.delay(10);
+        }
     }
 
     setBrightness(value: number) {
@@ -14,9 +47,15 @@ export default class DimmableLight extends Light {
             console.log("Value must be between 0 and 100.");
             return;
         }
-        
+
         this.brightness = value;
-        this.onUpdate();
+
+        if (this.currentBrightnessTask && this.currentBrightnessToken) {
+            this.currentBrightnessToken?.cancel();
+        }
+        
+        this.currentBrightnessToken = new CancellationToken();
+        this.currentBrightnessTask = this.setBrightnessAsync(this.currentBrightnessToken);
     }
 
     getProperties() {
@@ -26,9 +65,24 @@ export default class DimmableLight extends Light {
         return properties;
     }
 
-    onUpdate() {
-        const value = this.state ? this.brightness / 100 : 0;
+    updateChannels() {
+        const value = this.currentState * this.currentBrightness / 100;
         this.channels.one.setValue(value);
         this.writePins();
+    }
+
+    async setBrightnessAsync(token: CancellationToken): Promise<void> {
+        var brightnessIncrement = (this.brightness - this.currentBrightness) / 50;
+
+        for (let i = 0; i < 50; i++) {
+            if (token.isCancellationRequested) {
+                // this.brightness = this.currentBrightness;
+                break;
+            }
+
+            this.currentBrightness = this.constrain(this.currentBrightness + brightnessIncrement, 0, 100);
+            this.updateChannels();
+            await this.delay(10);
+        }
     }
 }

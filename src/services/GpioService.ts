@@ -39,7 +39,7 @@ export default class GpioService implements IPinService {
 
         value = Math.min(1, Math.max(0, value));
         // console.log(`Setting pin '${id}' to '${value}'`);
-        this.pins[id].pwmWrite(value * this.MAX_VALUE);
+        this.pins[id].pwmWrite(Math.round(value * this.MAX_VALUE));
     }
 
 }

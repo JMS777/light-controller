@@ -1,38 +1,33 @@
+import CancellationToken from "../helpers/CancellationToken";
 import { DeviceType } from "../helpers/DeviceType";
 import Channel from "./Channel";
 import Device from "./Device";
 
 export default class Light extends Device {
     type: DeviceType = DeviceType.BasicLight;
-    state = false;
+    state = 0;
+    currentState = 0;
 
     constructor(id: number, pin: number) {
         super(id);
         this.channels.one = new Channel(pin);
     }
 
-    toggle(): boolean {
-        this.state = !this.state;
-
-        this.onUpdate();
-
-        return this.state;
-    }
-
     getProperties() {
         const properties: any = super.getProperties();
-        properties.state = this.state;
+        properties.state = this.state > 0;
 
         return properties;
     }
 
     setState(state: boolean) {
-        this.state = state;
-        this.onUpdate();
+        this.state = state ? 1 : 0;
+        this.currentState = this.state;
+        this.updateChannels();
     }
 
-    onUpdate() {
-        const value = this.state ? 1 : 0;
+    updateChannels() {
+        const value = this.currentState;
         this.channels.one.setValue(value);
         this.writePins();
     }

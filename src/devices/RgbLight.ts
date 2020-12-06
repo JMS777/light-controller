@@ -2,11 +2,17 @@ import Channel from "./Channel";
 import DimmableLight from "./DimmableLight";
 import colorsys from 'colorsys';
 import { DeviceType } from "../helpers/DeviceType";
+import CancellationToken from "../helpers/CancellationToken";
 
 export default class RgbLight extends DimmableLight {
     type: DeviceType = DeviceType.RgbLight;
     hue = 0;
+    currentHue = 0;
     saturation = 0;
+    currentSaturation = 0;
+
+    private currentColourTask: Promise<void> | undefined;
+    private currentColourToken: CancellationToken | undefined;
 
     constructor(id: number, pinR: number, pinG: number, pinB: number) {
         super(id, pinR);
@@ -27,7 +33,13 @@ export default class RgbLight extends DimmableLight {
 
         this.hue = hue;
         this.saturation = saturation;
-        this.onUpdate();
+
+        if (this.currentColourTask && this.currentColourToken) {
+            this.currentColourToken?.cancel();
+        }
+        
+        this.currentColourToken = new CancellationToken();
+        this.currentColourTask = this.setColourAsync(this.currentColourToken);
     }
 
     getProperties() {
@@ -41,18 +53,37 @@ export default class RgbLight extends DimmableLight {
         return properties;
     }
 
-    onUpdate() {
-        const rgb = colorsys.hsv2Rgb(this.hue, this.saturation, this.brightness);
-        // console.log(`Hue: ${this.hue}, Saturation: ${this.saturation}, Brightness:${this.brightness}`);        
+    updateChannels() {
+        const rgb = colorsys.hsv2Rgb(this.currentHue, this.currentSaturation, this.currentBrightness);
+        console.log(`[Device ${this.id}] State: ${this.currentState}:${this.state}, Hue: ${this.currentHue}:${this.hue}, Saturation: ${this.currentSaturation}:${this.saturation}, Brightness:${this.currentBrightness}:${this.brightness}`);
 
-        const rValue = this.state ? rgb.r / 255 : 0;
-        const gValue = this.state ? rgb.g / 255 : 0;
-        const bValue = this.state ? rgb.b / 255: 0;
+        const rValue = this.currentState * rgb.r / 255;
+        const gValue = this.currentState * rgb.g / 255;
+        const bValue = this.currentState * rgb.b / 255;
 
         this.channels.one.setValue(rValue);
         this.channels.two.setValue(gValue);
         this.channels.three.setValue(bValue);
-        
+
         this.writePins();
     }
+
+    async setColourAsync(token: CancellationToken): Promise<void> {
+        var hueIncrement = (this.hue - this.currentHue) / 50;
+        var saturationIncrement = (this.saturation - this.currentSaturation) / 50;
+
+        for (let i = 0; i < 50; i++) {
+            if (token.isCancellationRequested) {
+                // this.hue = this.currentHue;
+                // this.saturation = this.currentSaturation;
+                break;
+            }
+
+            this.currentHue = this.constrain(this.currentHue + hueIncrement, 0, 360);
+            this.currentSaturation = this.constrain(this.currentSaturation + saturationIncrement, 0, 100);
+            this.updateChannels();
+            await this.delay(10);
+        }
+    }
+
 }
