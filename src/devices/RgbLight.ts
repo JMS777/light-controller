@@ -73,12 +73,12 @@ export default class RgbLight extends DimmableLight {
         let aHsv = { h: this.currentHue, s: this.currentSaturation };
         let bHsv = { h: this.hue, s: this.saturation };
 
-        for (let i = 0; i < this.STEPS; i++) {
+        for (let i = 1; i <= this.STEPS; i++) {
             if (token.isCancellationRequested) {
                 break;
             }
 
-            let newHsv = hsvHelper.HsvLerp(aHsv, bHsv, (i + 1) / this.STEPS);
+            let newHsv = hsvHelper.HsvLerp(aHsv, bHsv, i / this.STEPS);
 
             this.currentHue = newHsv.h
             this.currentSaturation = newHsv.s
