@@ -3,6 +3,7 @@ import DimmableLight from "./DimmableLight";
 import colorsys from 'colorsys';
 import { DeviceType } from "../helpers/DeviceType";
 import CancellationToken from "../helpers/CancellationToken";
+import * as hsvHelper from "../helpers/HsvHelper";
 
 export default class RgbLight extends DimmableLight {
     type: DeviceType = DeviceType.RgbLight;
@@ -37,7 +38,7 @@ export default class RgbLight extends DimmableLight {
         if (this.currentColourTask && this.currentColourToken) {
             this.currentColourToken?.cancel();
         }
-        
+
         this.currentColourToken = new CancellationToken();
         this.currentColourTask = this.setColourAsync(this.currentColourToken);
     }
@@ -55,7 +56,7 @@ export default class RgbLight extends DimmableLight {
 
     updateChannels() {
         const rgb = colorsys.hsv2Rgb(this.currentHue, this.currentSaturation, this.currentBrightness);
-        // console.log(`[Device ${this.id}] State: ${this.currentState}:${this.state}, Hue: ${this.currentHue}:${this.hue}, Saturation: ${this.currentSaturation}:${this.saturation}, Brightness:${this.currentBrightness}:${this.brightness}`);
+        console.log(`[Device ${this.id}] State: ${this.currentState}:${this.state}, Hue: ${this.currentHue}:${this.hue}, Saturation: ${this.currentSaturation}:${this.saturation}, Brightness:${this.currentBrightness}:${this.brightness}`);
 
         const rValue = this.currentState * rgb.r / 255;
         const gValue = this.currentState * rgb.g / 255;
@@ -69,19 +70,19 @@ export default class RgbLight extends DimmableLight {
     }
 
     async setColourAsync(token: CancellationToken): Promise<void> {
-        let dHue = this.hue - this.currentHue;
-        dHue += ((Math.abs(dHue) > 180) ? ((dHue < 0) ? 360 : -360) : 0);
-        dHue /= this.STEPS;
-
-        let dSaturation = (this.saturation - this.currentSaturation) / this.STEPS;
+        let aHsv = { h: this.currentHue, s: this.currentSaturation };
+        let bHsv = { h: this.hue, s: this.saturation };
 
         for (let i = 0; i < this.STEPS; i++) {
             if (token.isCancellationRequested) {
                 break;
             }
 
-            this.currentHue = (this.currentHue + dHue + 360) % 360
-            this.currentSaturation = this.constrain(this.currentSaturation + dSaturation, 0, 100);
+            let newHsv = hsvHelper.HsvLerp(aHsv, bHsv, (i + 1) / this.STEPS);
+
+            this.currentHue = newHsv.h
+            this.currentSaturation = newHsv.s
+
             this.updateChannels();
             await this.delay(this.FADE_TIME / this.STEPS);
         }
