@@ -3,6 +3,9 @@ import { DeviceType } from "../helpers/DeviceType";
 import Light from "./Light";
 
 export default class DimmableLight extends Light {
+    protected STEPS: number = 50;
+    protected FADE_TIME: number = 500; // Milliseconds
+
     brightness = 100;
     currentBrightness = 100;
     type: DeviceType = DeviceType.DimmableLight;
@@ -29,16 +32,16 @@ export default class DimmableLight extends Light {
     }
 
     async setStateAsync(token: CancellationToken): Promise<void> {
-        var stateIncrement = (this.state - this.currentState) / 50;        
+        var stateIncrement = (this.state - this.currentState) / this.STEPS;        
 
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < this.STEPS; i++) {
             if (token.isCancellationRequested) {
                 break;
             }
 
             this.currentState = this.constrain(this.currentState + stateIncrement, 0, 1);
             this.updateChannels();
-            await this.delay(10);
+            await this.delay(this.FADE_TIME / this.STEPS);
         }
     }
 
@@ -72,9 +75,9 @@ export default class DimmableLight extends Light {
     }
 
     async setBrightnessAsync(token: CancellationToken): Promise<void> {
-        var brightnessIncrement = (this.brightness - this.currentBrightness) / 50;
+        var brightnessIncrement = (this.brightness - this.currentBrightness) / this.STEPS;
 
-        for (let i = 0; i < 50; i++) {
+        for (let i = 0; i < this.STEPS; i++) {
             if (token.isCancellationRequested) {
                 // this.brightness = this.currentBrightness;
                 break;
@@ -82,7 +85,7 @@ export default class DimmableLight extends Light {
 
             this.currentBrightness = this.constrain(this.currentBrightness + brightnessIncrement, 0, 100);
             this.updateChannels();
-            await this.delay(10);
+            await this.delay(this.FADE_TIME / this.STEPS);
         }
     }
 }

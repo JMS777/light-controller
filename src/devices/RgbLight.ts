@@ -69,21 +69,21 @@ export default class RgbLight extends DimmableLight {
     }
 
     async setColourAsync(token: CancellationToken): Promise<void> {
-        var hueIncrement = (this.hue - this.currentHue) / 50;
-        var saturationIncrement = (this.saturation - this.currentSaturation) / 50;
+        let dHue = this.hue - this.currentHue;
+        dHue += ((Math.abs(dHue) > 180) ? ((dHue < 0) ? 360 : -360) : 0);
+        dHue /= this.STEPS;
 
-        for (let i = 0; i < 50; i++) {
+        let dSaturation = (this.saturation - this.currentSaturation) / this.STEPS;
+
+        for (let i = 0; i < this.STEPS; i++) {
             if (token.isCancellationRequested) {
-                // this.hue = this.currentHue;
-                // this.saturation = this.currentSaturation;
                 break;
             }
 
-            this.currentHue = this.constrain(this.currentHue + hueIncrement, 0, 360);
-            this.currentSaturation = this.constrain(this.currentSaturation + saturationIncrement, 0, 100);
+            this.currentHue = (this.currentHue + dHue + 360) % 360
+            this.currentSaturation = this.constrain(this.currentSaturation + dSaturation, 0, 100);
             this.updateChannels();
-            await this.delay(10);
+            await this.delay(this.FADE_TIME / this.STEPS);
         }
     }
-
 }
