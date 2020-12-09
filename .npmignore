@@ -1,4 +1,5 @@
 src
+tests
 static
 tsconfig.json
 nodemon.json
