@@ -14,6 +14,8 @@ export class Blink extends Effect {
     }
 
     protected async doWork(device: DimmableLight, cst: CancellationToken): Promise<void> {
+        device.setState(true);
+        
         let originalBrightness = device.brightness;
         
         while (!cst.isCancellationRequested) {
@@ -42,6 +44,8 @@ export class Pulse extends Effect {
     }
 
     protected async doWork(device: DimmableLight, cst: CancellationToken): Promise<void> {
+        device.setState(true);
+
         let originalBrightness = device.brightness;
         let direction = 1;
         while (!cst.isCancellationRequested) {
@@ -73,6 +77,8 @@ export class Rainbow extends Effect {
     }
 
     protected async doWork(device: RgbLight, cst: CancellationToken): Promise<void> {
+        device.setState(true);
+
         let originalHue = device.hue;
         let originalSaturation = device.saturation;
 
