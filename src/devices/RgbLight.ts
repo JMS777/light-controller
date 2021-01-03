@@ -4,6 +4,9 @@ import colorsys from 'colorsys';
 import { DeviceType } from "../helpers/DeviceType";
 import CancellationToken from "../helpers/CancellationToken";
 import * as hsvHelper from "../helpers/HsvHelper";
+import Effect from "../models/Effects/Effect";
+import { delay } from "../helpers/AsyncHelpers";
+import { Rainbow } from "../models/Effects/LightingEffects";
 
 export default class RgbLight extends DimmableLight {
     type: DeviceType = DeviceType.RgbLight;
@@ -21,15 +24,19 @@ export default class RgbLight extends DimmableLight {
         this.channels.three = new Channel(pinB);
     }
 
-    setColour(hue: number, saturation: number) {
+    setColour(hue: number, saturation: number, fade: boolean = false, calledFromEffect: boolean = false): Promise<void> {
         if (hue < 0 || hue > 360) {
             console.log("Hue must be between 0 and 360.");
-            return;
+            return Promise.resolve();
         }
 
         if (saturation < 0 || saturation > 100) {
             console.log("Saturation must be between 0 and 100.");
-            return;
+            return Promise.resolve();
+        }
+
+        if (this._currentEffect?.affectsColour && !calledFromEffect) {
+            this._currentEffect.cancel(true);
         }
 
         this.hue = hue;
@@ -39,8 +46,33 @@ export default class RgbLight extends DimmableLight {
             this.currentColourToken?.cancel();
         }
 
-        this.currentColourToken = new CancellationToken();
-        this.currentColourTask = this.setColourAsync(this.currentColourToken);
+        if (fade) {
+            this.currentColourToken = new CancellationToken();
+            this.currentColourTask = this.setColourAsync(this.currentColourToken);
+            return this.currentColourTask;
+        } else {
+            this.currentHue = this.hue;
+            this.currentSaturation = this.saturation;
+            this.updateChannels();
+            return Promise.resolve();
+        }
+    }
+
+    public getEffects(): Effect[] {
+        let effects = super.getEffects();
+        effects.push(
+            new Rainbow()
+        );
+
+        return effects;
+    }
+
+    setEffect(effect: Effect): void {
+        if (effect.affectsColour) {
+            this.currentColourToken?.cancel();
+        }
+
+        super.setEffect(effect);
     }
 
     getProperties() {
@@ -84,7 +116,7 @@ export default class RgbLight extends DimmableLight {
             this.currentSaturation = newHsv.s
 
             this.updateChannels();
-            await this.delay(this.FADE_TIME / this.STEPS);
+            await delay(this.FADE_TIME / this.STEPS);
         }
     }
 }

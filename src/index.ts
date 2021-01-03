@@ -34,7 +34,7 @@ if (deviceFilename) {
     console.log('Please specify a devices file in "__dirname/.env" using the key DEVICE_FILE=<filename>');
 }
 
-// v1
+//#region v1
 
 // GET /api/v1/lights
 app.get('/api/v1/lights', (req, res) => {
@@ -184,7 +184,9 @@ app.put('/api/v1/lights/colour/:id', (req, res) => {
     }
 });
 
-// v2
+//#endregion
+
+//#region v2
 
 // GET /api/v2/devices
 app.get('/api/v2/devices', (req, res) => {
@@ -278,7 +280,7 @@ app.put('/api/v2/lights/brightness/:id', (req, res) => {
     const device = deviceManager?.getDevice<DimmableLight>(id);
 
     if (device) {
-        device.setBrightness(req.body.brightness);
+        device.setBrightness(req.body.brightness, true);
         return res.status(200).send({
             success: 'true',
             message: 'Light updated'
@@ -312,7 +314,7 @@ app.put('/api/v2/lights/colour/:id', (req, res) => {
     const device = deviceManager?.getDevice<RgbLight>(id);
 
     if (device) {
-        device.setColour(req.body.hsv.h, req.body.hsv.s);
+        device.setColour(req.body.hsv.h, req.body.hsv.s, true);
         return res.status(200).send({
             success: 'true',
             message: 'Light updated'
@@ -324,6 +326,78 @@ app.put('/api/v2/lights/colour/:id', (req, res) => {
         });
     }
 });
+
+// GET /api/v2/effects/{id}
+app.get('/api/v2/effects/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+
+    if (id == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'id required'
+        });
+    }
+
+    const device = deviceManager?.getDevice(id);
+
+    if (device) {
+
+        let effects: string[] = [];
+        device.getEffects().forEach(eff => effects.push(eff.id));
+        
+        return res.status(200).send(effects);
+    } else {
+        return res.status(500).send({
+            success: 'false',
+            message: 'Light does not exist'
+        });
+    }
+});
+
+// PUT /api/v2/effects/{id}
+app.put('/api/v2/effects/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+
+    if (id == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'id required'
+        });
+    }
+
+    if (req.body.effect == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'effect is required'
+        });
+    }
+
+    const device = deviceManager?.getDevice(id);
+
+    if (device) {
+        let effect = device.getEffects().filter(eff => eff.id == req.body.effect)[0];
+
+        if (effect) {
+            device.setEffect(effect);
+            return res.status(200).send({
+                success: 'true',
+                message: 'Light updated'
+            });
+        } else {
+            return res.status(400).send({
+                success: 'false',
+                message: `Effect with name '${req.body.effect}' is not supported by this device.`
+            });
+        }
+    } else {
+        return res.status(500).send({
+            success: 'false',
+            message: 'Light does not exist'
+        });
+    }
+});
+
+//#endregion
 
 app.listen(port, () => {
     console.log(`Server started at http://localhost:${port}`);

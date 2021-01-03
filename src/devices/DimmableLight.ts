@@ -1,5 +1,10 @@
+import { basename } from "path";
+import { waveGetHighPulses } from "pigpio";
+import { delay } from "../helpers/AsyncHelpers";
 import CancellationToken from "../helpers/CancellationToken";
 import { DeviceType } from "../helpers/DeviceType";
+import Effect from "../models/Effects/Effect";
+import { Blink, Pulse } from "../models/Effects/LightingEffects";
 import Light from "./Light";
 
 export default class DimmableLight extends Light {
@@ -41,14 +46,18 @@ export default class DimmableLight extends Light {
 
             this.currentState = this.constrain(this.currentState + stateIncrement, 0, 1);
             this.updateChannels();
-            await this.delay(this.FADE_TIME / this.STEPS);
+            await delay(this.FADE_TIME / this.STEPS);
         }
     }
 
-    setBrightness(value: number) {
+    setBrightness(value: number, fade: boolean = false, calledFromEffect: boolean = false) {
         if (value < 0 || value > 100) {
             console.log("Value must be between 0 and 100.");
             return;
+        }
+
+        if (this._currentEffect?.affectsBrightness && !calledFromEffect) {
+            this._currentEffect.cancel(true);
         }
 
         this.brightness = value;
@@ -56,9 +65,32 @@ export default class DimmableLight extends Light {
         if (this.currentBrightnessTask && this.currentBrightnessToken) {
             this.currentBrightnessToken?.cancel();
         }
+
+        if (fade) {
+            this.currentBrightnessToken = new CancellationToken();
+            this.currentBrightnessTask = this.setBrightnessAsync(this.currentBrightnessToken);
+        } else {
+            this.currentBrightness = this.brightness;
+            this.updateChannels();
+        }
+    }
+
+    public getEffects(): Effect[] {
+        let effects = super.getEffects();
+        effects.push(
+            new Blink(),
+            new Pulse()
+        );
         
-        this.currentBrightnessToken = new CancellationToken();
-        this.currentBrightnessTask = this.setBrightnessAsync(this.currentBrightnessToken);
+        return effects;
+    }
+
+    setEffect(effect: Effect): void {
+        if (effect.affectsBrightness) {
+            this.currentBrightnessToken?.cancel();
+        }
+
+        super.setEffect(effect);
     }
 
     getProperties() {
@@ -85,7 +117,7 @@ export default class DimmableLight extends Light {
 
             this.currentBrightness = this.constrain(this.currentBrightness + brightnessIncrement, 0, 100);
             this.updateChannels();
-            await this.delay(this.FADE_TIME / this.STEPS);
+            await delay(this.FADE_TIME / this.STEPS);
         }
     }
 }

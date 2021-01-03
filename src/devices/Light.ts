@@ -1,4 +1,3 @@
-import CancellationToken from "../helpers/CancellationToken";
 import { DeviceType } from "../helpers/DeviceType";
 import Channel from "./Channel";
 import Device from "./Device";
