@@ -1,4 +1,4 @@
-import Device from "../../devices/Device";
+import Device from "../../devices/Abstract/Device";
 import CancellationToken from "../../helpers/CancellationToken";
 
 export default abstract class Effect {

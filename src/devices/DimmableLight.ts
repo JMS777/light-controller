@@ -1,18 +1,18 @@
-import { basename } from "path";
-import { waveGetHighPulses } from "pigpio";
 import { delay } from "../helpers/AsyncHelpers";
 import CancellationToken from "../helpers/CancellationToken";
 import { DeviceType } from "../helpers/DeviceType";
+import { constrain } from "../helpers/MathHelper";
 import Effect from "../models/Effects/Effect";
 import { Blink, Pulse } from "../models/Effects/LightingEffects";
+import { IDimmableLight } from "./Abstract/ILights";
 import Light from "./Light";
 
-export default class DimmableLight extends Light {
+export default class DimmableLight extends Light implements IDimmableLight {
     protected STEPS: number = 50;
     protected FADE_TIME: number = 500; // Milliseconds
 
     brightness = 100;
-    currentBrightness = 100;
+    stateTransition = this.state ? 1 : 0;
     type: DeviceType = DeviceType.DimmableLight;
 
     private currentStateTask: Promise<void> | undefined;
@@ -25,11 +25,12 @@ export default class DimmableLight extends Light {
         super(id, pin);
     }
 
-    setState(state: boolean) {
-        this.state = state ? 1 : 0;
+    async setState(state: boolean): Promise<void> {
+        this.state = state;
 
         if (this.currentStateTask && this.currentStateToken) {
             this.currentStateToken.cancel();
+            await this.currentStateTask;
         }
 
         this.currentStateToken = new CancellationToken();
@@ -37,41 +38,60 @@ export default class DimmableLight extends Light {
     }
 
     async setStateAsync(token: CancellationToken): Promise<void> {
-        var stateIncrement = (this.state - this.currentState) / this.STEPS;        
+        var stateIncrement = ((this.state ? 1 : 0) - this.stateTransition) / this.STEPS;
 
         for (let i = 0; i < this.STEPS; i++) {
             if (token.isCancellationRequested) {
                 break;
             }
 
-            this.currentState = this.constrain(this.currentState + stateIncrement, 0, 1);
+            this.stateTransition = constrain(this.stateTransition + stateIncrement, 0, 1);
             this.updateChannels();
             await delay(this.FADE_TIME / this.STEPS);
         }
     }
 
-    setBrightness(value: number, fade: boolean = false, calledFromEffect: boolean = false) {
-        if (value < 0 || value > 100) {
-            console.log("Value must be between 0 and 100.");
-            return;
+    setBrightness(brightness: number): void {
+        if (brightness < 0 || brightness > 100) {
+            console.warn("Brightness must be between 0 and 100.");
+            brightness = constrain(brightness, 0, 100);
         }
 
-        if (this._currentEffect?.affectsBrightness && !calledFromEffect) {
-            this._currentEffect.cancel(true);
+        this.brightness = brightness;
+        this.updateChannels();
+    }
+
+    async setBrightnessSmooth(brightness: number): Promise<void> {
+        if (brightness < 0 || brightness > 100) {
+            console.warn("Brightness must be between 0 and 100.");
+            brightness = constrain(brightness, 0, 100);
         }
 
-        this.brightness = value;
+        if (this._currentEffect?.affectsBrightness) {
+            await this._currentEffect.cancel(true);
+        }
 
         if (this.currentBrightnessTask && this.currentBrightnessToken) {
-            this.currentBrightnessToken?.cancel();
+            this.currentBrightnessToken?.cancel(true);
+            await this.currentBrightnessTask;
         }
 
-        if (fade) {
-            this.currentBrightnessToken = new CancellationToken();
-            this.currentBrightnessTask = this.setBrightnessAsync(this.currentBrightnessToken);
-        } else {
-            this.currentBrightness = this.brightness;
-            this.updateChannels();
+        this.currentBrightnessToken = new CancellationToken();
+        this.currentBrightnessTask = this.setBrightnessAsync(brightness, this.currentBrightnessToken);
+
+        return this.currentBrightnessTask;
+    }
+
+    async setBrightnessAsync(targetBrightness: number, token: CancellationToken): Promise<void> {
+        var brightnessIncrement = (targetBrightness - this.brightness) / this.STEPS;
+
+        for (let i = 0; i < this.STEPS; i++) {
+            if (token.isCancellationRequested) {
+                break;
+            }
+
+            this.setBrightness(this.brightness + brightnessIncrement);
+            await delay(this.FADE_TIME / this.STEPS);
         }
     }
 
@@ -81,16 +101,18 @@ export default class DimmableLight extends Light {
             new Blink(),
             new Pulse()
         );
-        
+
         return effects;
     }
 
-    setEffect(effect: Effect): void {
+    setEffect(effectName: string): void {
+        let effect = this.CreateEffect(effectName);
+
         if (effect.affectsBrightness) {
-            this.currentBrightnessToken?.cancel();
+            this.currentBrightnessToken?.cancel(true);
         }
 
-        super.setEffect(effect);
+        super.setEffect(effectName);
     }
 
     getProperties() {
@@ -101,23 +123,8 @@ export default class DimmableLight extends Light {
     }
 
     updateChannels() {
-        const value = this.currentState * this.currentBrightness / 100;
+        const value = this.stateTransition * this.brightness / 100;
         this.channels.one.setValue(value);
         this.writePins();
-    }
-
-    async setBrightnessAsync(token: CancellationToken): Promise<void> {
-        var brightnessIncrement = (this.brightness - this.currentBrightness) / this.STEPS;
-
-        for (let i = 0; i < this.STEPS; i++) {
-            if (token.isCancellationRequested) {
-                // this.brightness = this.currentBrightness;
-                break;
-            }
-
-            this.currentBrightness = this.constrain(this.currentBrightness + brightnessIncrement, 0, 100);
-            this.updateChannels();
-            await delay(this.FADE_TIME / this.STEPS);
-        }
     }
 }

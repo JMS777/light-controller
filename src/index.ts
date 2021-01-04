@@ -4,9 +4,7 @@ import path from "path";
 import dotenv from "dotenv";
 import JsonDeviceManager from "./services/JsonDeviceManager";
 import IDeviceManager from "./services/IDeviceManager";
-import Light from "./devices/Light";
-import DimmableLight from "./devices/DimmableLight";
-import RgbLight from "./devices/RgbLight";
+import { IDimmableLight, ILight, IRgbLight } from "./devices/Abstract/ILights";
 
 // initialise configuration.
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -102,7 +100,7 @@ app.put('/api/v1/lights/switch/:id', (req, res) => {
         });
     }
 
-    const device = deviceManager?.getDevice<Light>(id);
+    const device = deviceManager?.getDevice<ILight>(id);
 
     if (device) {
         device.setState(req.body.switch == 1);
@@ -134,7 +132,7 @@ app.put('/api/v1/lights/brightness/:id', (req, res) => {
         });
     }
 
-    const device = deviceManager?.getDevice<DimmableLight>(id);
+    const device = deviceManager?.getDevice<IDimmableLight>(id);
 
     if (device) {
         device.setBrightness(req.body.brightness * 100);
@@ -168,7 +166,7 @@ app.put('/api/v1/lights/colour/:id', (req, res) => {
         });
     }
 
-    const device = deviceManager?.getDevice<RgbLight>(id);
+    const device = deviceManager?.getDevice<IRgbLight>(id);
 
     if (device) {
         device.setColour(req.body.hsv.h, req.body.hsv.s);
@@ -245,7 +243,7 @@ app.put('/api/v2/lights/state/:id', (req, res) => {
         });
     }
 
-    const device = deviceManager?.getDevice<Light>(id);
+    const device = deviceManager?.getDevice<ILight>(id);
 
     if (device) {
         device.setState(req.body.state);
@@ -277,10 +275,10 @@ app.put('/api/v2/lights/brightness/:id', (req, res) => {
         });
     }
 
-    const device = deviceManager?.getDevice<DimmableLight>(id);
+    const device = deviceManager?.getDevice<IDimmableLight>(id);
 
     if (device) {
-        device.setBrightness(req.body.brightness, true);
+        device.setBrightnessSmooth(req.body.brightness);
         return res.status(200).send({
             success: 'true',
             message: 'Light updated'
@@ -311,10 +309,10 @@ app.put('/api/v2/lights/colour/:id', (req, res) => {
         });
     }
 
-    const device = deviceManager?.getDevice<RgbLight>(id);
+    const device = deviceManager?.getDevice<IRgbLight>(id);
 
     if (device) {
-        device.setColour(req.body.hsv.h, req.body.hsv.s, true);
+        device.setColourSmooth(req.body.hsv.h, req.body.hsv.s);
         return res.status(200).send({
             success: 'true',
             message: 'Light updated'
@@ -375,20 +373,11 @@ app.put('/api/v2/effects/:id', (req, res) => {
     const device = deviceManager?.getDevice(id);
 
     if (device) {
-        let effect = device.getEffects().filter(eff => eff.id == req.body.effect)[0];
-
-        if (effect) {
-            device.setEffect(effect);
-            return res.status(200).send({
-                success: 'true',
-                message: 'Light updated'
-            });
-        } else {
-            return res.status(400).send({
-                success: 'false',
-                message: `Effect with name '${req.body.effect}' is not supported by this device.`
-            });
-        }
+        device.setEffect(req.body.effect);
+        return res.status(200).send({
+            success: 'true',
+            message: 'Light updated'
+        });
     } else {
         return res.status(500).send({
             success: 'false',

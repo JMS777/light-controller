@@ -1,8 +1,9 @@
 import IDeviceManager from "./IDeviceManager";
 import fs from 'fs';
 import Devices from "../models/Devices";
-import Device from "../devices/Device";
+import Device from "../devices/Abstract/Device";
 import DeviceFactory from "../helpers/DeviceFactory";
+import GroupFactory from "../helpers/GroupFactory";
 
 export default class JsonDeviceManager implements IDeviceManager {
     devices: Device[] = [];
@@ -26,12 +27,23 @@ export default class JsonDeviceManager implements IDeviceManager {
                 const device = DeviceFactory.Create(info.type, info.id, info.pins);
 
                 if (device) {
-                    device.updateChannels();
+                    device.initialise();
                     this.devices.push(device);
                 } else {
                     console.log(`Failed to create device from: ${info}`);
                 }
             });
+
+            devicesDetails.groups.map(info => {
+                const group = GroupFactory.Create(info.type, info.id, this.devices.filter(d => info.devices.includes(d.id)));
+
+                if (group) {
+                    group.initialise();
+                    this.devices.push(group);
+                } else {
+                    console.log(`Failed to create group from: ${info}`);
+                }
+            })
 
             if (callback) {
                 callback(this.devices);

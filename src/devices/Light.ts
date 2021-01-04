@@ -1,11 +1,10 @@
 import { DeviceType } from "../helpers/DeviceType";
-import Channel from "./Channel";
-import Device from "./Device";
+import { ILight } from "./Abstract/ILights";
+import PwmDevice, { Channel } from "./Abstract/PwmDevice";
 
-export default class Light extends Device {
+export default class Light extends PwmDevice implements ILight {
     type: DeviceType = DeviceType.BasicLight;
-    state = 0;
-    currentState = 0;
+    state = false;
 
     constructor(id: number, pin: number) {
         super(id);
@@ -14,20 +13,19 @@ export default class Light extends Device {
 
     getProperties() {
         const properties: any = super.getProperties();
-        properties.state = this.state > 0;
+        properties.state = this.state;
 
         return properties;
     }
 
-    setState(state: boolean) {
-        this.state = state ? 1 : 0;
-        this.currentState = this.state;
+    setState(state: boolean): void {
+        this.state = state;
         this.updateChannels();
     }
 
     updateChannels() {
-        const value = this.currentState;
-        this.channels.one.setValue(value);
+        const value = this.state;
+        this.channels.one.setValue(value ? 1 : 0);
         this.writePins();
     }
 }

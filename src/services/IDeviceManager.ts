@@ -1,4 +1,4 @@
-import Device from "../devices/Device";
+import Device from "../devices/Abstract/Device";
 
 export default interface IDeviceManager {
     devices: Device[];

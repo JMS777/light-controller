@@ -1,4 +1,4 @@
-import Device from "../devices/Device";
+import Device from "../devices/Abstract/Device";
 import DimmableLight from "../devices/DimmableLight";
 import Light from "../devices/Light";
 import RgbLight from "../devices/RgbLight";

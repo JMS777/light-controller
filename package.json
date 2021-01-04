@@ -1,6 +1,6 @@
 {
   "name": "@jms777/light-controller",
-  "version": "2.2.1",
+  "version": "2.2.4",
   "description": "Simple web service for controlling lights via a raspberry pi.",
   "main": "dist/index.js",
   "scripts": {

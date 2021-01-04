@@ -1,6 +1,4 @@
-import DimmableLight from "../../devices/DimmableLight";
-import Light from "../../devices/Light";
-import RgbLight from "../../devices/RgbLight";
+import { IDimmableLight, IRgbLight } from "../../devices/Abstract/ILights";
 import { delay } from "../../helpers/AsyncHelpers";
 import CancellationToken from "../../helpers/CancellationToken"
 import Effect from "./Effect"
@@ -13,22 +11,23 @@ export class Blink extends Effect {
         super("Blink");
     }
 
-    protected async doWork(device: DimmableLight, cst: CancellationToken): Promise<void> {
+    protected async doWork(device: IDimmableLight, cst: CancellationToken): Promise<void> {
         device.setState(true);
         
         let originalBrightness = device.brightness;
         
         while (!cst.isCancellationRequested) {
-            device.setBrightness(100, undefined, true);
+            device.setBrightness(100);
 
             await delay(1000);
             if (cst.isCancellationRequested) break;
             
-            device.setBrightness(0, undefined, true);
+            device.setBrightness(0);
             await delay(1000);
         }
-
-        device.setBrightness(originalBrightness, true, true);
+        
+        if (!this.cst?.immediate)
+            await device.setBrightnessSmooth(originalBrightness);
     }
 
 }
@@ -43,26 +42,27 @@ export class Pulse extends Effect {
         super("Pulse");
     }
 
-    protected async doWork(device: DimmableLight, cst: CancellationToken): Promise<void> {
+    protected async doWork(device: IDimmableLight, cst: CancellationToken): Promise<void> {
         device.setState(true);
 
         let originalBrightness = device.brightness;
         let direction = 1;
+
         while (!cst.isCancellationRequested) {
-            if (direction > 0 && device.currentBrightness >= 100) {
+            if (direction > 0 && device.brightness >= 100) {
                 direction = -1
-            } else if (direction < 0 && device.currentBrightness <= 0) {
+            } else if (direction < 0 && device.brightness <= 0) {
                 direction = 1;
             }
 
-            device.setBrightness(device.currentBrightness + direction, undefined, true);
+            device.setBrightness(device.brightness + direction);
             await delay(this.PULSE_DELAY);
         }
         
         if (!this.cst?.immediate)
-            device.setBrightness(originalBrightness, true, true);
-        else
-            device.brightness = originalBrightness;
+            await device.setBrightnessSmooth(originalBrightness);
+        // else
+        //     device.brightness = originalBrightness;
     }
 }
 
@@ -76,30 +76,31 @@ export class Rainbow extends Effect {
         super("Rainbow");
     }
 
-    protected async doWork(device: RgbLight, cst: CancellationToken): Promise<void> {
+    protected async doWork(device: IRgbLight, cst: CancellationToken): Promise<void> {
         device.setState(true);
 
         let originalHue = device.hue;
         let originalSaturation = device.saturation;
 
-        await device.setColour(device.currentHue, 100, true, true);
+        while(!cst.isCancellationRequested && device.saturation < 100) {
+            device.setColour(undefined, device.saturation + 1);
+            await delay(10);
+        }
 
         while (!cst.isCancellationRequested) {
-            if (device.currentHue >= 359) {
-                device.setColour(0, 100, undefined, true)
+            if (device.hue >= 359) {
+                device.setColour(0, 100)
             } else {
-                device.setColour(device.currentHue + 1, 100, undefined, true);
+                device.setColour(device.hue + 1, 100);
             }
 
             await delay(this.HUE_DELAY);
         }
 
         if (!this.cst?.immediate)
-            device.setColour(originalHue, originalSaturation, true, true);
-        else {
-            device.hue = originalHue;
-            device.saturation = originalSaturation;
-        }
+            await device.setColourSmooth(originalHue, originalSaturation);
+        // else {
+        //     device.hue = originalHue;
+        //     device.saturation = originalSaturation;
     }
-
 }

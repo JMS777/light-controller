@@ -18,5 +18,15 @@
                 "blue": 4
             }
         }
+    ],
+    "groups": [
+        {
+            "id": 3,
+            "type": "group-light-rgb",
+            "devices": [
+                1,
+                2
+            ]
+        }
     ]
 }

@@ -34,6 +34,10 @@ export function Round(num: number, dp = 0): number {
     return Math.round((num + Number.EPSILON) * factor) / factor;
 }
 
+export function constrain(a: number, min: number, max: number): number {
+    return Math.min(max, Math.max(min, a));
+}
+
 export class Coord {
     public x: number;
     public y: number;

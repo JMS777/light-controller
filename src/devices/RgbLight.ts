@@ -1,4 +1,3 @@
-import Channel from "./Channel";
 import DimmableLight from "./DimmableLight";
 import colorsys from 'colorsys';
 import { DeviceType } from "../helpers/DeviceType";
@@ -7,13 +6,14 @@ import * as hsvHelper from "../helpers/HsvHelper";
 import Effect from "../models/Effects/Effect";
 import { delay } from "../helpers/AsyncHelpers";
 import { Rainbow } from "../models/Effects/LightingEffects";
+import { Channel } from "./Abstract/PwmDevice";
+import { IRgbLight } from "./Abstract/ILights";
+import { constrain } from "../helpers/MathHelper";
 
-export default class RgbLight extends DimmableLight {
+export default class RgbLight extends DimmableLight implements IRgbLight {
     type: DeviceType = DeviceType.RgbLight;
     hue = 0;
-    currentHue = 0;
     saturation = 0;
-    currentSaturation = 0;
 
     private currentColourTask: Promise<void> | undefined;
     private currentColourToken: CancellationToken | undefined;
@@ -24,37 +24,81 @@ export default class RgbLight extends DimmableLight {
         this.channels.three = new Channel(pinB);
     }
 
-    setColour(hue: number, saturation: number, fade: boolean = false, calledFromEffect: boolean = false): Promise<void> {
-        if (hue < 0 || hue > 360) {
-            console.log("Hue must be between 0 and 360.");
-            return Promise.resolve();
+    setColour(hue?: number, saturation?: number, value?: number): void {
+        if (hue != undefined && (hue < 0 || hue > 359)) {
+            console.warn("Hue must be between 0 and 360.");
+            hue = constrain(hue, 0, 359);
         }
 
-        if (saturation < 0 || saturation > 100) {
-            console.log("Saturation must be between 0 and 100.");
-            return Promise.resolve();
+        if (saturation != undefined && (saturation < 0 || saturation > 100)) {
+            console.warn("Saturation must be between 0 and 100.");
+            saturation = constrain(saturation, 0, 100);
         }
 
-        if (this._currentEffect?.affectsColour && !calledFromEffect) {
-            this._currentEffect.cancel(true);
+        if (value != undefined && (value < 0 || value > 100)) {
+            console.warn("Value must be between 0 and 100.");
+            value = constrain(value, 0, 100);
         }
 
-        this.hue = hue;
-        this.saturation = saturation;
+        if (hue != undefined)
+            this.hue = hue;
+        if (saturation != undefined)
+            this.saturation = saturation;
+        if (value != undefined)
+            this.brightness = value;
+        
+        this.updateChannels();
+    }
+
+    async setColourSmooth(hue?: number, saturation?: number, value?: number): Promise<void> {
+        if (hue != undefined && (hue < 0 || hue > 359)) {
+            console.warn("Hue must be between 0 and 360.");
+            hue = constrain(hue, 0, 359);
+        }
+
+        if (saturation != undefined && (saturation < 0 || saturation > 100)) {
+            console.warn("Saturation must be between 0 and 100.");
+            saturation = constrain(saturation, 0, 100);
+        }
+
+        if (value != undefined && (value < 0 || value > 100)) {
+            console.warn("Value must be between 0 and 100.");
+            value = constrain(value, 0, 100);
+        }
+
+        if (this._currentEffect?.affectsColour) {
+            await this._currentEffect.cancel(true);
+        }
 
         if (this.currentColourTask && this.currentColourToken) {
-            this.currentColourToken?.cancel();
+            this.currentColourToken?.cancel(true);
+            await this.currentColourTask;
         }
 
-        if (fade) {
-            this.currentColourToken = new CancellationToken();
-            this.currentColourTask = this.setColourAsync(this.currentColourToken);
-            return this.currentColourTask;
-        } else {
-            this.currentHue = this.hue;
-            this.currentSaturation = this.saturation;
+        if (value != undefined)
+            this.setBrightnessSmooth(value);
+
+        this.currentColourToken = new CancellationToken();
+        this.currentColourTask = this.setColourAsync(hue ?? this.hue, saturation ?? this.saturation, this.currentColourToken);
+        await this.currentColourTask;
+    }
+
+    async setColourAsync(targetHue: number, targetSaturation: number, token: CancellationToken): Promise<void> {
+        let aHsv = { h: this.hue, s: this.saturation };
+        let bHsv = { h: targetHue, s: targetSaturation };
+
+        for (let i = 1; i <= this.STEPS; i++) {
+            if (token.isCancellationRequested) {
+                break;
+            }
+
+            let newHsv = hsvHelper.HsvLerp(aHsv, bHsv, i / this.STEPS);
+
+            this.hue = newHsv.h
+            this.saturation = newHsv.s
+
             this.updateChannels();
-            return Promise.resolve();
+            await delay(this.FADE_TIME / this.STEPS);
         }
     }
 
@@ -67,12 +111,14 @@ export default class RgbLight extends DimmableLight {
         return effects;
     }
 
-    setEffect(effect: Effect): void {
+    setEffect(effectName: string): void {
+        let effect = this.CreateEffect(effectName);
+
         if (effect.affectsColour) {
             this.currentColourToken?.cancel();
         }
 
-        super.setEffect(effect);
+        super.setEffect(effectName);
     }
 
     getProperties() {
@@ -87,36 +133,17 @@ export default class RgbLight extends DimmableLight {
     }
 
     updateChannels() {
-        const rgb = colorsys.hsv2Rgb(this.currentHue, this.currentSaturation, this.currentBrightness);
+        const rgb = colorsys.hsv2Rgb(this.hue, this.saturation, this.brightness);
         // console.log(`[Device ${this.id}] State: ${this.currentState}:${this.state}, Hue: ${this.currentHue}:${this.hue}, Saturation: ${this.currentSaturation}:${this.saturation}, Brightness:${this.currentBrightness}:${this.brightness}`);
 
-        const rValue = this.currentState * rgb.r / 255;
-        const gValue = this.currentState * rgb.g / 255;
-        const bValue = this.currentState * rgb.b / 255;
+        const rValue = this.stateTransition * rgb.r / 255;
+        const gValue = this.stateTransition * rgb.g / 255;
+        const bValue = this.stateTransition * rgb.b / 255;
 
         this.channels.one.setValue(rValue);
         this.channels.two.setValue(gValue);
         this.channels.three.setValue(bValue);
 
         this.writePins();
-    }
-
-    async setColourAsync(token: CancellationToken): Promise<void> {
-        let aHsv = { h: this.currentHue, s: this.currentSaturation };
-        let bHsv = { h: this.hue, s: this.saturation };
-
-        for (let i = 1; i <= this.STEPS; i++) {
-            if (token.isCancellationRequested) {
-                break;
-            }
-
-            let newHsv = hsvHelper.HsvLerp(aHsv, bHsv, i / this.STEPS);
-
-            this.currentHue = newHsv.h
-            this.currentSaturation = newHsv.s
-
-            this.updateChannels();
-            await delay(this.FADE_TIME / this.STEPS);
-        }
     }
 }
