@@ -1,7 +1,7 @@
 import { delay } from "../helpers/AsyncHelpers";
 import CancellationToken from "../helpers/CancellationToken";
 import { DeviceType } from "../helpers/DeviceType";
-import { constrain } from "../helpers/MathHelper";
+import { constrain, Round } from "../helpers/MathHelper";
 import Effect from "../models/Effects/Effect";
 import { Blink, Pulse } from "../models/Effects/LightingEffects";
 import { IDimmableLight } from "./Abstract/ILights";
@@ -90,7 +90,7 @@ export default class DimmableLight extends Light implements IDimmableLight {
                 break;
             }
 
-            this.setBrightness(this.brightness + brightnessIncrement);
+            this.setBrightness(Round(this.brightness + brightnessIncrement, 2));
             await delay(this.FADE_TIME / this.STEPS);
         }
     }
