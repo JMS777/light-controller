@@ -90,9 +90,11 @@ export default class DimmableLight extends Light implements IDimmableLight {
                 break;
             }
 
-            this.setBrightness(Round(this.brightness + brightnessIncrement, 2));
+            this.setBrightness(this.brightness + brightnessIncrement);
             await delay(this.FADE_TIME / this.STEPS);
         }
+
+        this.setBrightness(Round(this.brightness, 0));
     }
 
     public getEffects(): Effect[] {
