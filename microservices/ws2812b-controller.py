@@ -52,7 +52,7 @@ class LEDStrip:
     def __init__(self, num_pixels, pin):
         self.num_pixels = num_pixels
         self.pixels = neopixel.NeoPixel(
-            pin, self.num_pixels, brightness=0.2, auto_write=False, pixel_order=neopixel.GRB)
+            pin, self.num_pixels, auto_write=False, pixel_order=neopixel.GRB)
         self.currentEffect = None
         self.stopFlag = False
         self.effects = ["Rainbow Wheel", "Stack"]

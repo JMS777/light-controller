@@ -11,7 +11,7 @@ import { IPhysicalDevice } from "../Abstract/IPhysicalDevice";
 
 export default class RgbLight extends DimmableLight implements IRgbLight {
     type: DeviceType = DeviceType.RgbLight;
-    hue = 30;
+    hue = 16;
     saturation = 100;
 
     private currentColourTask: Promise<void> | undefined;

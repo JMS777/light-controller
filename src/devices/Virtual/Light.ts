@@ -14,7 +14,9 @@ export default class Light extends VirtualDevice implements ILight {
         this.physical = physical;
     }
 
-    public initialise(): void { }
+    public initialise(): void {
+        this.updateChannels()
+    }
 
     getProperties() {
         const properties: any = super.getProperties();
