@@ -1,27 +1,24 @@
 import DimmableLight from "./DimmableLight";
-import colorsys from 'colorsys';
-import { DeviceType } from "../helpers/DeviceType";
-import CancellationToken from "../helpers/CancellationToken";
-import * as hsvHelper from "../helpers/HsvHelper";
-import Effect from "../models/Effects/Effect";
-import { delay } from "../helpers/AsyncHelpers";
-import { Rainbow } from "../models/Effects/LightingEffects";
-import { Channel } from "./Abstract/PwmDevice";
-import { IRgbLight } from "./Abstract/ILights";
-import { constrain } from "../helpers/MathHelper";
+import { DeviceType } from "../../helpers/DeviceType";
+import CancellationToken from "../../helpers/CancellationToken";
+import * as hsvHelper from "../../helpers/HsvHelper";
+import Effect from "../../models/Effects/Effect";
+import { delay } from "../../helpers/AsyncHelpers";
+import { Rainbow } from "../../models/Effects/LightingEffects";
+import { IRgbLight } from "../Abstract/IVirtualLights";
+import { constrain } from "../../helpers/MathHelper";
+import { IPhysicalDevice } from "../Abstract/IPhysicalDevice";
 
 export default class RgbLight extends DimmableLight implements IRgbLight {
     type: DeviceType = DeviceType.RgbLight;
-    hue = 0;
-    saturation = 0;
+    hue = 30;
+    saturation = 100;
 
     private currentColourTask: Promise<void> | undefined;
     private currentColourToken: CancellationToken | undefined;
 
-    constructor(id: number, pinR: number, pinG: number, pinB: number) {
-        super(id, pinR);
-        this.channels.two = new Channel(pinG);
-        this.channels.three = new Channel(pinB);
+    constructor(id: number, physical: IPhysicalDevice) {
+        super(id, physical);
     }
 
     setColour(hue?: number, saturation?: number, value?: number): void {
@@ -111,14 +108,14 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
         return effects;
     }
 
-    setEffect(effectName: string): void {
+    setEffect(effectName: string): boolean {
         let effect = this.CreateEffect(effectName);
 
-        if (effect.affectsColour) {
+        if (effect?.affectsColour ?? true) {
             this.currentColourToken?.cancel();
         }
 
-        super.setEffect(effectName);
+        return super.setEffect(effectName);
     }
 
     getProperties() {
@@ -133,17 +130,25 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
     }
 
     updateChannels() {
-        const rgb = colorsys.hsv2Rgb(this.hue, this.saturation, this.brightness);
-        // console.log(`[Device ${this.id}] State: ${this.currentState}:${this.state}, Hue: ${this.currentHue}:${this.hue}, Saturation: ${this.currentSaturation}:${this.saturation}, Brightness:${this.currentBrightness}:${this.brightness}`);
+        const properties = {
+            hue: this.hue,
+            saturation: this.saturation,
+            brightness: this.brightness * this.stateTransition
+        };
 
-        const rValue = this.stateTransition * rgb.r / 255;
-        const gValue = this.stateTransition * rgb.g / 255;
-        const bValue = this.stateTransition * rgb.b / 255;
+        this.physical.update(properties);
 
-        this.channels.one.setValue(rValue);
-        this.channels.two.setValue(gValue);
-        this.channels.three.setValue(bValue);
+        // const rgb = colorsys.hsv2Rgb(this.hue, this.saturation, this.brightness);
+        // // console.log(`[Device ${this.id}] State: ${this.currentState}:${this.state}, Hue: ${this.currentHue}:${this.hue}, Saturation: ${this.currentSaturation}:${this.saturation}, Brightness:${this.currentBrightness}:${this.brightness}`);
 
-        this.writePins();
+        // const rValue = this.stateTransition * rgb.r / 255;
+        // const gValue = this.stateTransition * rgb.g / 255;
+        // const bValue = this.stateTransition * rgb.b / 255;
+
+        // this.channels.one.setValue(rValue);
+        // this.channels.two.setValue(gValue);
+        // this.channels.three.setValue(bValue);
+
+        // this.writePins();
     }
 }

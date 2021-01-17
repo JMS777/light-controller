@@ -1,7 +1,6 @@
-import { DeviceType } from "../helpers/DeviceType";
-import { IRgbLight } from "./Abstract/ILights";
-import Device from "./Abstract/Device";
-import DeviceGroup from "./Abstract/DeviceGroup";
+import { DeviceType } from "../../helpers/DeviceType";
+import { IRgbLight } from "../Abstract/IVirtualLights";
+import DeviceGroup from "../Abstract/DeviceGroup";
 
 export default class RgbLightGroup extends DeviceGroup<IRgbLight> implements IRgbLight {
     type: DeviceType = DeviceType.RgbLightGroup;

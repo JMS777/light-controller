@@ -1,4 +1,4 @@
-import Device from "../../devices/Abstract/Device";
+import VirtualDevice from "../../devices/Abstract/VirtualDevice";
 import CancellationToken from "../../helpers/CancellationToken";
 
 export default abstract class Effect {
@@ -14,7 +14,7 @@ export default abstract class Effect {
         this.id = id;
     }
 
-    public execute(device: Device): void
+    public execute(device: VirtualDevice): void
     {
         this.cst = new CancellationToken();
 
@@ -30,7 +30,7 @@ export default abstract class Effect {
             callback();
     }
 
-    protected abstract doWork(device: Device, cst: CancellationToken): Promise<void>;
+    protected abstract doWork(device: VirtualDevice, cst: CancellationToken): Promise<void>;
 }
 
 export class NoEffect extends Effect {
@@ -41,7 +41,7 @@ export class NoEffect extends Effect {
         super("No Effect");
     }
     
-    protected async doWork(device: Device, cst: CancellationToken): Promise<void> {
+    protected async doWork(device: VirtualDevice, cst: CancellationToken): Promise<void> {
 
     }
 

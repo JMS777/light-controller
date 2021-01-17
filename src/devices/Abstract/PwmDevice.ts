@@ -1,39 +1,30 @@
 import GpioService from "../../services/GpioService";
 import IPinService from "../../services/IPinService";
 import Dictionary from "../../models/IDictionary";
-import Device from "./Device";
+import { IPhysicalDevice } from "./IPhysicalDevice";
 
-export default abstract class PwmDevice extends Device {
+export default abstract class PwmDevice implements IPhysicalDevice {
     
     protected channels: Dictionary<Channel> = {};
 
     protected _pinService: IPinService;
 
-    constructor(id: number) {
-        super(id);
+    constructor(pins: any) {
         this._pinService = GpioService.getInstance();
-        this.id = id;
+
+        Object.keys(pins).map(k => {
+            const pin = pins[k] as number;
+            this.channels[k] = new Channel(pin);
+        });
     }
 
-    abstract updateChannels(): void;
-
-    initialise() {
-        this.updateChannels();
-    }
+    abstract update(properties: any): void;
 
     protected writePins(): void {
         Object.keys(this.channels).map(k => {
             const c = this.channels[k] as Channel;
             this._pinService.setPin(c.pin, c.value);
         });
-    }
-
-    getProperties(): any {
-        const properties = super.getProperties();
-
-        properties.channels = this.channels;
-
-        return properties;
     }
 }
 

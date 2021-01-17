@@ -1,0 +1,9 @@
+[Unit]
+Description=Microservice for controlling WS2812B addressable LEDs via the light-controller service.
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/lib/node_modules/@jms777/light-controller/dist/index.js
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -1,7 +1,7 @@
-import Device from "../devices/Abstract/Device";
+import VirtualDevice from "../devices/Abstract/VirtualDevice";
 
 export default interface IDeviceManager {
-    devices: Device[];
-    loadDevices(callback?: (devices: Device[]) => any): void;
-    getDevice<T extends Device>(id: number): T;
+    devices: VirtualDevice[];
+    loadDevices(callback?: (devices: VirtualDevice[]) => any): void;
+    getDevice<T extends VirtualDevice>(id: number): T;
 }

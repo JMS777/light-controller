@@ -3,19 +3,30 @@
         {
             "id": 1,
             "type": "light-rgb",
-            "pins": {
-                "red": 13,
-                "green": 19,
-                "blue": 26
+            "physicalInfo": {
+                "pins": {
+                    "red": 13,
+                    "green": 19,
+                    "blue": 26
+                }
             }
         },
         {
             "id": 2,
             "type": "light-rgb",
-            "pins": {
-                "red": 2,
-                "green": 3,
-                "blue": 4
+            "physicalInfo": {
+                "pins": {
+                    "red": 2,
+                    "green": 3,
+                    "blue": 4
+                }
+            }
+        },
+        {
+            "id": 4,
+            "type": "light-ws2812b",
+            "physicalInfo": {
+                "host": "tcp://localhost:8347"
             }
         }
     ],

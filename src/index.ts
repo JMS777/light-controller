@@ -4,7 +4,7 @@ import path from "path";
 import dotenv from "dotenv";
 import JsonDeviceManager from "./services/JsonDeviceManager";
 import IDeviceManager from "./services/IDeviceManager";
-import { IDimmableLight, ILight, IRgbLight } from "./devices/Abstract/ILights";
+import { IDimmableLight, ILight, IRgbLight } from "./devices/Abstract/IVirtualLights";
 
 // initialise configuration.
 dotenv.config({ path: path.join(__dirname, '.env') });

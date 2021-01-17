@@ -1,10 +1,10 @@
 import { DeviceType } from "../../helpers/DeviceType";
 import Effect, { NoEffect } from "../../models/Effects/Effect";
 
-export default abstract class Device {
+export default abstract class VirtualDevice {
     public id: number;
     abstract type: DeviceType;
-
+    
     protected _currentEffect: Effect | undefined;
 
     constructor(id: number) {
@@ -17,7 +17,7 @@ export default abstract class Device {
         return [new NoEffect()];
     }
 
-    public setEffect(effectName: string): void {
+    public setEffect(effectName: string): boolean {
         let effect = this.CreateEffect(effectName);
 
         if (effect) {
@@ -30,8 +30,10 @@ export default abstract class Device {
             }
 
             this._currentEffect = effect;
+            return true;
         } else {
             console.warn(`Effect '${effectName}' not found`);
+            return false;
         }
     }
 

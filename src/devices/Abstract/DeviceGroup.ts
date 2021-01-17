@@ -1,8 +1,7 @@
-import Devices from "../../models/Devices";
 import Effect from "../../models/Effects/Effect";
-import Device from "./Device";
+import VirtualDevice from "./VirtualDevice";
 
-export default abstract class DeviceGroup<T extends Device> extends Device {
+export default abstract class DeviceGroup<T extends VirtualDevice> extends VirtualDevice {
     devices: T[];
 
     constructor(id: number, devices: T[]) {
@@ -22,8 +21,9 @@ export default abstract class DeviceGroup<T extends Device> extends Device {
         return this.devices[0].getEffects();
     }
 
-    public setEffect(effectName: string): void {
+    public setEffect(effectName: string): boolean {
         this.devices.map(d => d.setEffect(effectName));
+        return true;
     }
 
     public stopEffect(): void {

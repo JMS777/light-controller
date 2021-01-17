@@ -1,6 +1,6 @@
-import Device from "./Device";
+import VirtualDevice from "./VirtualDevice";
 
-export interface ILight extends Device {
+export interface ILight extends VirtualDevice {
     state: boolean;
 
     setState(state: boolean): void;
@@ -19,4 +19,8 @@ export interface IRgbLight extends IDimmableLight {
 
     setColour(hue?: number, saturation?: number, value?: number): void;
     setColourSmooth(hue?: number, saturation?: number, value?: number): Promise<void>;
+}
+
+export interface IAddressableRgbLight extends IRgbLight {
+    pixelCount: number;
 }

@@ -1,21 +1,27 @@
-import Device from "../devices/Abstract/Device";
-import DimmableLight from "../devices/DimmableLight";
-import Light from "../devices/Light";
-import RgbLight from "../devices/RgbLight";
+import VirtualDevice from "../devices/Abstract/VirtualDevice";
+import DimmableLight from "../devices/Virtual/DimmableLight";
+import Light from "../devices/Virtual/Light";
+import RgbLight from "../devices/Virtual/RgbLight";
 import { DeviceType } from "./DeviceType";
+import AddressableRgbStrip from "../devices/Virtual/AddressableRgbStrip";
+import WS2812B from "../devices/Physical/WS2812B";
+import { PwmLight, PwmRgbLight } from "../devices/Physical/PwmLights";
+import Device from "../models/Device";
 
 export default class DeviceFactory {
-    static Create(type: DeviceType, id: number, pins: any): Device | undefined {
-        switch (type) {
+    static Create(info: Device): VirtualDevice | undefined {
+        switch (info.type) {
             case DeviceType.BasicLight:
-                return new Light(id, pins.main);
+                return new Light(info.id, new PwmLight(info.physicalInfo.pins));
             case DeviceType.DimmableLight:
-                return new DimmableLight(id, pins.main);
+                return new DimmableLight(info.id, new PwmLight(info.physicalInfo.pins));
             case DeviceType.RgbLight:
-                return new RgbLight(id, pins.red, pins.green, pins.blue);
+                return new RgbLight(info.id, new PwmRgbLight(info.physicalInfo.pins));
+            case DeviceType.WS2812B:
+                return new AddressableRgbStrip(info.id, new WS2812B(info.physicalInfo.host));
 
             default:
-                console.log(`Device type '${type}' is unsupported.`);
+                console.log(`Device type '${info.type}' is unsupported.`);
                 return undefined;
         }
     }

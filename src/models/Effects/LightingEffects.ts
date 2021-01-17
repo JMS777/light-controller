@@ -1,4 +1,4 @@
-import { IDimmableLight, IRgbLight } from "../../devices/Abstract/ILights";
+import { IDimmableLight, IRgbLight } from "../../devices/Abstract/IVirtualLights";
 import { delay } from "../../helpers/AsyncHelpers";
 import CancellationToken from "../../helpers/CancellationToken"
 import Effect from "./Effect"

@@ -1,10 +1,11 @@
-import { delay } from "../helpers/AsyncHelpers";
-import CancellationToken from "../helpers/CancellationToken";
-import { DeviceType } from "../helpers/DeviceType";
-import { constrain, Round } from "../helpers/MathHelper";
-import Effect from "../models/Effects/Effect";
-import { Blink, Pulse } from "../models/Effects/LightingEffects";
-import { IDimmableLight } from "./Abstract/ILights";
+import { delay } from "../../helpers/AsyncHelpers";
+import CancellationToken from "../../helpers/CancellationToken";
+import { DeviceType } from "../../helpers/DeviceType";
+import { constrain, Round } from "../../helpers/MathHelper";
+import Effect from "../../models/Effects/Effect";
+import { Blink, Pulse } from "../../models/Effects/LightingEffects";
+import { IDimmableLight } from "../Abstract/IVirtualLights";
+import { IPhysicalDevice } from "../Abstract/IPhysicalDevice";
 import Light from "./Light";
 
 export default class DimmableLight extends Light implements IDimmableLight {
@@ -21,8 +22,8 @@ export default class DimmableLight extends Light implements IDimmableLight {
     private currentBrightnessTask: Promise<void> | undefined;
     private currentBrightnessToken: CancellationToken | undefined;
 
-    constructor(id: number, pin: number) {
-        super(id, pin);
+    constructor(id: number, physical: IPhysicalDevice) {
+        super(id, physical);
     }
 
     async setState(state: boolean): Promise<void> {
@@ -107,14 +108,14 @@ export default class DimmableLight extends Light implements IDimmableLight {
         return effects;
     }
 
-    setEffect(effectName: string): void {
+    setEffect(effectName: string): boolean {
         let effect = this.CreateEffect(effectName);
 
-        if (effect.affectsBrightness) {
+        if (effect?.affectsBrightness ?? true) {
             this.currentBrightnessToken?.cancel(true);
         }
 
-        super.setEffect(effectName);
+        return super.setEffect(effectName);
     }
 
     getProperties() {
@@ -125,8 +126,10 @@ export default class DimmableLight extends Light implements IDimmableLight {
     }
 
     updateChannels() {
-        const value = this.stateTransition * this.brightness / 100;
-        this.channels.one.setValue(value);
-        this.writePins();
+        const properties = {
+            brightness: this.stateTransition * (this.brightness / 100)
+        };
+
+        this.physical.update(properties);
     }
 }

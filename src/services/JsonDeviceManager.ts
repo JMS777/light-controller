@@ -1,30 +1,30 @@
 import IDeviceManager from "./IDeviceManager";
 import fs from 'fs';
 import Devices from "../models/Devices";
-import Device from "../devices/Abstract/Device";
+import VirtualDevice from "../devices/Abstract/VirtualDevice";
 import DeviceFactory from "../helpers/DeviceFactory";
 import GroupFactory from "../helpers/GroupFactory";
 
 export default class JsonDeviceManager implements IDeviceManager {
-    devices: Device[] = [];
+    devices: VirtualDevice[] = [];
     private filename: string;
 
     constructor(filename: string) {
         this.filename = filename;
     }
 
-    getDevice<T extends Device>(id: number): T {
+    getDevice<T extends VirtualDevice>(id: number): T {
         return this.devices.find(d => d.id === id) as T;
     }
 
-    loadDevices(callback: (devices: Device[]) => any) {
+    loadDevices(callback: (devices: VirtualDevice[]) => any) {
         fs.readFile(this.filename, 'utf8', (err, data) => {
             if (err) throw err;
 
             const devicesDetails = JSON.parse(data) as Devices;
 
             devicesDetails.devices.map(info => {
-                const device = DeviceFactory.Create(info.type, info.id, info.pins);
+                const device = DeviceFactory.Create(info);
 
                 if (device) {
                     device.initialise();
