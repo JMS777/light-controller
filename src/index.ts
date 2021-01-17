@@ -4,7 +4,7 @@ import path from "path";
 import dotenv from "dotenv";
 import JsonDeviceManager from "./services/JsonDeviceManager";
 import IDeviceManager from "./services/IDeviceManager";
-import { IDimmableLight, ILight, IRgbLight } from "./devices/Abstract/IVirtualLights";
+import { IDimmableLight, ILight, IRgbLight, IAddressableRgbLight } from "./devices/Abstract/IVirtualLights";
 
 // initialise configuration.
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -313,6 +313,40 @@ app.put('/api/v2/lights/colour/:id', (req, res) => {
 
     if (device) {
         device.setColourSmooth(req.body.hsv.h, req.body.hsv.s);
+        return res.status(200).send({
+            success: 'true',
+            message: 'Light updated'
+        });
+    } else {
+        return res.status(500).send({
+            success: 'false',
+            message: 'Light does not exist'
+        });
+    }
+});
+
+// PUT /api/v2/lights/pixels/{id}
+app.put('/api/v2/lights/pixels/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+
+    if (id == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'id required'
+        });
+    }
+
+    if (req.body.pixels == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'pixels is required'
+        });
+    }
+
+    const device = deviceManager?.getDevice<IAddressableRgbLight>(id);
+
+    if (device) {
+        device.setPixels(req.body.pixels)
         return res.status(200).send({
             success: 'true',
             message: 'Light updated'

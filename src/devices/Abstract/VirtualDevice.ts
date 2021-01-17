@@ -1,5 +1,5 @@
 import { DeviceType } from "../../helpers/DeviceType";
-import Effect, { NoEffect } from "../../models/Effects/Effect";
+import Effect, { ExternalEffect, NoEffect } from "../../models/Effects/Effect";
 
 export default abstract class VirtualDevice {
     public id: number;
@@ -19,8 +19,8 @@ export default abstract class VirtualDevice {
 
     public setEffect(effectName: string): boolean {
         let effect = this.CreateEffect(effectName);
-
-        if (effect) {
+        let isExternal = effect instanceof ExternalEffect;
+        if (effect && !isExternal) {
             if (this._currentEffect) {
                 this._currentEffect.cancel(undefined,
                     () => effect.execute(this)
@@ -32,7 +32,9 @@ export default abstract class VirtualDevice {
             this._currentEffect = effect;
             return true;
         } else {
-            console.warn(`Effect '${effectName}' not found`);
+            if (this._currentEffect) {
+                this._currentEffect.cancel();
+            }
             return false;
         }
     }

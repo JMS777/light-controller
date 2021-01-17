@@ -33,6 +33,16 @@ export default abstract class Effect {
     protected abstract doWork(device: VirtualDevice, cst: CancellationToken): Promise<void>;
 }
 
+export class ExternalEffect extends Effect {
+    public affectsBrightness: boolean = true;
+    public affectsColour: boolean = true;
+
+    protected async doWork(device: VirtualDevice, cst: CancellationToken): Promise<void> {
+
+    }
+
+}
+
 export class NoEffect extends Effect {
     public affectsBrightness: boolean = false;
     public affectsColour: boolean = false;

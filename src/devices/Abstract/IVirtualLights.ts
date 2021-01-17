@@ -1,3 +1,4 @@
+import Rgb from "../../models/Rgb";
 import VirtualDevice from "./VirtualDevice";
 
 export interface ILight extends VirtualDevice {
@@ -23,4 +24,7 @@ export interface IRgbLight extends IDimmableLight {
 
 export interface IAddressableRgbLight extends IRgbLight {
     pixelCount: number;
+    pixels: Rgb[];
+
+    setPixels(pixels: Rgb[]): void;
 }

@@ -1,4 +1,5 @@
 import colorsys from 'colorsys';
+import Rgb from '../../models/Rgb';
 import MicroserviceDevice from "../Abstract/MicroserviceDevice";
 
 export default class WS2812B extends MicroserviceDevice {
@@ -18,5 +19,16 @@ export default class WS2812B extends MicroserviceDevice {
             if (callback)
                 callback(res);
         });
+    }
+
+    getEffects(callback: (effects: string[]) => void): void {
+        this.client.invoke("GetEffects", (error: any, res: any, more: any) => {
+            if (callback)
+                callback(res);
+        });
+    }
+
+    setPixels(pixels: Rgb[]) {
+        this.client.invoke("SetPixels", pixels);
     }
 }
