@@ -12,6 +12,7 @@ import path from "path";
 import CancellationToken from "../../helpers/CancellationToken";
 import { delay } from "../../helpers/AsyncHelpers";
 import { constrain } from "../../helpers/MathHelper";
+import { DeviceType } from "src/helpers/DeviceType";
 
 export default class AddressableRgbStrip extends RgbLight implements IAddressableRgbLight {
 
@@ -26,7 +27,8 @@ export default class AddressableRgbStrip extends RgbLight implements IAddressabl
 
     constructor(id: number, physical: WS2812B) {
         super(id, physical);
-
+        
+        this.type = DeviceType.WS2812B;
         this.physical = physical;
 
         this.initializePresets();

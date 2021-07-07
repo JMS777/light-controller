@@ -8,8 +8,14 @@ Currently 4 types of light are supported:
 -   light-rgb (RGB Channel PWM light)
 -   light-ws2812b (Addressable LED Light Strip (WS2812B chip))
 
+## Possible Future Updates
+- Animations for addressable LED strips
+    - "scroll"
+    - "bounce"
+    - "random" - Randomly pick out of the available colours. Maybe include a segment size to break the LED strip into segments
+
 ## Run as service (Raspberry Pi - systemctl)
-Run the following commands to register the service with systemd so allow it to start with the OS:
+Run the following commands to register the service with systemd to allow it to start with the OS:
 
 ``` bash
 # Create a symbolic link between the service definition and the systemd folder.
@@ -21,14 +27,12 @@ sudo systemctl start light-controller.service
 ```
 
 ## Device File
-A json file containing the devices and the corresponding pins needs to be present in order for the web service to setup the requried devices.
+This should be located in the /dist folder and named `devices.json` (if you want to change this you can update the path to the file in the `/dist/.env` file).
 
-The filepath relative to root directory (`__dirname`) should be specified in a `.env` file (this should be located in the root folder, note this is the `./dist` folder when running via systemd). Please use the format `DEVICE_FILE=<filename>`.
+This file contains required information for your devices, i.e. which pins your lights are connected too, or the number of pixels on an addressable LED strip.
 
-### Layout
-The device file should follow this format of this example:
-
-``` json
+The layout for each type of device is as follows:
+```
 {
     "devices": [
         {
@@ -58,7 +62,7 @@ The device file should follow this format of this example:
             "id": 4,
             "type": "light-ws2812b",
             "physicalInfo": {
-                "pin": 18, // Allowed values are 10, 12, 18 and 21
+                "pin": 18, // WS2812B lights can only be connected to pins 10, 12, 18 and 21
                 "pixelCount": 100 // The number of LEDs on your LED strip
             }
         }
@@ -66,11 +70,11 @@ The device file should follow this format of this example:
 }
 ```
 
-## Endpoints (v2)
+# Endpoints (v2)
 
-### Device Info
+## Device Info
 Get all devices and their properties:
-``` json
+```
 GET /api/v2/devices
 
 response.body: {
@@ -96,14 +100,17 @@ response.body: {
                     "pin": number,
                     "value": number // (0 - 1)
                 }
-            }
+            },
+            "pixels": [
+                ... // List of RGB values representing each pixel on the LED strip (WS2812B only)
+            ]
         }
     ]
 }
 ```
 
 Get a specific device's properties:
-``` json
+```
 GET /api/v2/devices/{id}
 
 response.body: {
@@ -128,69 +135,117 @@ response.body: {
                 "pin": number,
                 "value": number // (0 - 1)
             }
-        }
+        },
+        "pixels": [
+            ... // List of RGB values representing each pixel on the LED strip (WS2812B only)
+        ]
     }
 }
 ```
 
-### State
-
-``` json
+## State
+Set the state of the light to on/off.
+```
 PUT /api/v2/lights/state/{id}
 
 request.body: {
     "state": boolean
 }
-
-response.body: {
-    "success": boolean,
-    "message": string
-}
 ```
 
-### Brightness
-``` json
+## Brightness
+Set the brightness of the light. Valid range 0 - 100.
+```
 PUT /api/v2/lights/brightness/{id}
 
 request.body: {
-    "brightness": number // (0 - 100)
-}
-
-response.body: {
-    "success": boolean,
-    "message": string
+    "brightness": number
 }
 ```
 
-### Colour
-``` json
+## Colour
+Set the colour of the light in the HSV colour space. Valid values for hue are 0 - 360, and valid values for saturation and value are 0 - 100.
+```
 PUT /api/v2/lights/colour/{id}
 
 request.body: {
     "hsv": {
-        "h": number, // (0 - 360)
-        "s": number, // (0 - 100)
-        "v": number, // (0 - 100)
+        "h": number,
+        "s": number,
+        "v": number,
     }
-}
-
-response.body: {
-    "success": boolean,
-    "message": string
 }
 ```
 
-### General Purpose **(WIP)** - WS2812B only
-Currently includes more advanced colour selection, which will automatically apply a gradient across the strip if mulitple colours are supplied.
-``` json
+## Pixels - WS2812B only
+Used to set the individual pixels of an addressable LED strip. Each pixel is defined with an RGB colour, valid channel values are 0 - 255.
+
+```
+PUT /api/v2/lights/pixels/{id}
+
+request.body: {
+    "pixels": [
+        {"r": 255, "g": 0, "b": 128},
+        {"r": 255, "g": 0, "b": 0},
+        {"r": 0, "g": 255, "b": 128},
+        ...
+    ]
+}
+```
+
+# Endpoints (v3)
+## General Purpose **(WIP)** - WS2812B only
+Currently includes a more advanced colour selection, which will automatically apply a gradient across the LED strip if mulitple colours are supplied.
+
+If you specify one colour (HSV) in the "colours" array parameter the light will be set to that colour, if multiple colours are specified it will
+calculate a gradient between all the colours.
+```
 PUT /api/v3/lights/{id}
 
 request.body: {
-    "colours": [ // Colour and brightness of the light, include multiple colours to add a gradient effect.
+    "colours": [
         { "h": 360, "s": 100, "v": 100 },
         { "h": 120, "s": 100, "v": 100 },
         { "h": 240, "s": 100, "v": 100 }
     ],
-    "animation": null // NOT YET IMPLEMENTED (Possible future feature) - Values: null / "scroll" / "bounce" / "random" - (Randomly pick out of the available colours. Maybe include a segment size to break the LED strip into segments)
+}
+```
+
+## Presets - WS2812B only
+It's possible to save the current pixel values for the WS2812B device and load them at a later time type using these endpoints.
+
+Note: Presets are stored separately for each device.
+
+List Presets
+```
+GET /api/v3/lights/{id}/presets
+
+Response - Array (string[]) of preset names.
+```
+
+Load Preset
+```
+PUT /api/v3/lights/{id}/presets
+
+request.body: {
+    "name": "<preset name>"
+}
+```
+
+Save Preset
+```
+PUT /api/v3/lights/{id}/presets/save
+
+request.body: {
+    "name": "<preset name>"
+}
+```
+
+Delete Preset
+```
+DELETE /api/v3/lights/{id}/presets/delete
+
+request.body: {
+    "name": "<preset name>"
 }
 ```
