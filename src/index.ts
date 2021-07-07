@@ -347,7 +347,7 @@ app.put('/api/v2/lights/pixels/:id', (req, res) => {
     const device = deviceManager?.getDevice<IAddressableRgbLight>(id);
 
     if (device) {
-        device.setPixels(req.body.pixels);
+        device.setPixelsSmooth(req.body.pixels);
         return res.status(200).send({
             success: 'true',
             message: 'Light updated'
@@ -437,7 +437,7 @@ app.put('/api/v3/lights/:id', (req, res) => {
     if (device) {
         const colours: Hsv[] = req.body.colours;
         const interpolationType: string = req.body.interpolation;
-        device.setColours(colours, interpolationType);
+        device.setColoursSmooth(colours, interpolationType);
         return res.status(200).send({
             success: 'true',
             message: 'Light updated'

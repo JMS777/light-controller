@@ -29,7 +29,9 @@ export interface IAddressableRgbLight extends IRgbLight {
     pixels: Rgb[];
 
     setPixels(pixels: Rgb[]): void;
+    setPixelsSmooth(pixels: Rgb[]): Promise<void>;
     setColours(colours: Hsv[], interpolationType: string): void;
+    setColoursSmooth(colours: Hsv[], interpolationType: string): Promise<void>;
     setAnimation(animation: Animations): void;
     getPresets(): string[];
     savePreset(name: string): void;

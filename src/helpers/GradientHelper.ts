@@ -36,7 +36,7 @@ export function InterpolateRgb(colours: Hsv[], t: number): Hsv {
         tSegment));
 }
 
-function InterpolateRgbSingle(a: Rgb, b: Rgb, t: number): Rgb {
+export function InterpolateRgbSingle(a: Rgb, b: Rgb, t: number): Rgb {
     const rgb = new Rgb(
         Lerp(a.r, b.r, t),
         Lerp(a.g, b.g, t),

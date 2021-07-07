@@ -15,14 +15,14 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
     hue = 16;
     saturation = 100;
 
-    private currentColourTask: Promise<void> | undefined;
-    private currentColourToken: CancellationToken | undefined;
+    protected currentColourTask: Promise<void> | undefined;
+    protected currentColourToken: CancellationToken | undefined;
 
     constructor(id: number, physical: IPhysicalDevice) {
         super(id, physical);
     }
 
-    setColour(hue?: number, saturation?: number, value?: number): void {
+    protected validateHsv(hue?: number, saturation?: number, value?: number): Hsv {
         if (hue != undefined && (hue < 0 || hue > 359)) {
             console.warn("Hue must be between 0 and 360.");
             hue = constrain(hue, 0, 359);
@@ -38,31 +38,21 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
             value = constrain(value, 0, 100);
         }
 
-        if (hue != undefined)
-            this.hue = hue;
-        if (saturation != undefined)
-            this.saturation = saturation;
-        if (value != undefined)
-            this.brightness = value;
+        return new Hsv(hue ?? this.hue, saturation ?? this.saturation, value ?? this.brightness);
+    }
+
+    setColour(hue?: number, saturation?: number, value?: number): void {
+        const hsv = this.validateHsv(hue, saturation, value);
+
+        this.hue = hsv.h;
+        this.saturation = hsv.s;
+        this.brightness = hsv.v;
         
         this.updateChannels();
     }
 
     async setColourSmooth(hue?: number, saturation?: number, value?: number): Promise<void> {
-        if (hue != undefined && (hue < 0 || hue > 359)) {
-            console.warn("Hue must be between 0 and 360.");
-            hue = constrain(hue, 0, 359);
-        }
-
-        if (saturation != undefined && (saturation < 0 || saturation > 100)) {
-            console.warn("Saturation must be between 0 and 100.");
-            saturation = constrain(saturation, 0, 100);
-        }
-
-        if (value != undefined && (value < 0 || value > 100)) {
-            console.warn("Value must be between 0 and 100.");
-            value = constrain(value, 0, 100);
-        }
+        const hsv = this.validateHsv(hue, saturation, value);
 
         if (this._currentEffect?.affectsColour) {
             await this._currentEffect.cancel(true);
@@ -74,10 +64,10 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
         }
 
         if (value != undefined)
-            this.setBrightnessSmooth(value);
+            this.setBrightnessSmooth(hsv.v);
 
         this.currentColourToken = new CancellationToken();
-        this.currentColourTask = this.setColourAsync(hue ?? this.hue, saturation ?? this.saturation, this.currentColourToken);
+        this.currentColourTask = this.setColourAsync(hsv.h, hsv.s, this.currentColourToken);
         await this.currentColourTask;
     }
 
