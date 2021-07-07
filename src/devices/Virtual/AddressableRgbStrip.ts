@@ -62,6 +62,8 @@ export default class AddressableRgbStrip extends RgbLight implements IAddressabl
     }
 
     setPixels(pixels: Rgb[]): void {
+        if (!this.state) this.setState(true);
+
         if (this.pixels.length != this.pixelCount) {
             this.pixels = new Array<Rgb>(this.pixelCount);
             for (let i = 0; i < this.pixels.length; i++) {
@@ -77,6 +79,8 @@ export default class AddressableRgbStrip extends RgbLight implements IAddressabl
     }
 
     async setPixelsSmooth(pixels: Rgb[]): Promise<void> {
+        if (!this.state) this.setState(true);
+        
         if (this._currentEffect?.affectsColour) {
             await this._currentEffect.cancel(true);
         }
