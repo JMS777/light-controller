@@ -18,8 +18,8 @@ export default abstract class VirtualDevice {
     }
 
     public setEffect(effectName: string): boolean {
-        let effect = this.CreateEffect(effectName);
-        let isExternal = effect instanceof ExternalEffect;
+        const effect = this.CreateEffect(effectName);
+        const isExternal = effect instanceof ExternalEffect;
         if (effect && !isExternal) {
             if (this._currentEffect) {
                 this._currentEffect.cancel(undefined,

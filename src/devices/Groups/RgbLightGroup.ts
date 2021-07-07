@@ -7,19 +7,19 @@ export default class RgbLightGroup extends DeviceGroup<IRgbLight> implements IRg
 
     get state(): boolean {
         return this.devices[0].state;
-    };
+    }
 
     get brightness(): number {
         return this.devices[0].brightness;
-    };
+    }
 
     get hue(): number {
         return this.devices[0].hue;
-    };
+    }
     
     get saturation(): number {
         return this.devices[0].saturation;
-    };
+    }
 
     constructor(id: number, lights: IRgbLight[]) {
         super(id, lights);

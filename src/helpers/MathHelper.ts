@@ -17,9 +17,9 @@ export function NormaliseRad(a: number): number {
 }
 
 export function Lerp(a: number, b: number, t: number): number {
-    let delta = b - a;
+    const delta = b - a;
 
-    let c = a + (delta * t);
+    const c = a + (delta * t);
 
     return c;
 }
@@ -29,7 +29,7 @@ export function LerpCoord(a: Coord, b: Coord, t: number): Coord {
 }
 
 export function Round(num: number, dp = 0): number {
-    let factor = 10 ** dp;
+    const factor = 10 ** dp;
 
     return Math.round((num + Number.EPSILON) * factor) / factor;
 }

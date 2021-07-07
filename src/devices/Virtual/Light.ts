@@ -15,10 +15,10 @@ export default class Light extends VirtualDevice implements ILight {
     }
 
     public initialise(): void {
-        this.updateChannels()
+        this.updateChannels();
     }
 
-    getProperties() {
+    getProperties(): any {
         const properties: any = super.getProperties();
         properties.state = this.state;
 
@@ -30,7 +30,7 @@ export default class Light extends VirtualDevice implements ILight {
         this.updateChannels();
     }
 
-    updateChannels() {
+    updateChannels(): void {
         const properties = {
             brightness: this.state ? 1 : 0
         };

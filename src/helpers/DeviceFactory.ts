@@ -18,7 +18,7 @@ export default class DeviceFactory {
             case DeviceType.RgbLight:
                 return new RgbLight(info.id, new PwmRgbLight(info.physicalInfo.pins));
             case DeviceType.WS2812B:
-                return new AddressableRgbStrip(info.id, new WS2812B(info.physicalInfo.host));
+                return new AddressableRgbStrip(info.id, new WS2812B(info.physicalInfo.pin, info.physicalInfo.pixelCount));
 
             default:
                 console.log(`Device type '${info.type}' is unsupported.`);

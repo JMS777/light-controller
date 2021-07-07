@@ -3,6 +3,7 @@ Description=Web service for controlling lights via a raspberry pi.
 
 [Service]
 ExecStart=/usr/bin/node /usr/lib/node_modules/@jms777/light-controller/dist/index.js
+WorkingDirectory=/usr/lib/node_modules/@jms777/light-controller
 Restart=always
 
 [Install]

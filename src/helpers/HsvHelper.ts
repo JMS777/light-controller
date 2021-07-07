@@ -1,5 +1,6 @@
-import { Coord as HsvHelper } from "./MathHelper";
+import { Coord } from "./MathHelper";
 import * as MathHelper from "./MathHelper";
+import Hsv from "../models/Hsv";
 
 /**
  * Linearly interpolates between two colours in the HSV colourspace.
@@ -8,12 +9,14 @@ import * as MathHelper from "./MathHelper";
  * @param t Interpolation factor (0 - 1)
  */
 export function HsvLerp(a: Hsv, b: Hsv, t: number): Hsv {
-    let aCoords = HueSaturationToCartesian(a);
-    let bCoords = HueSaturationToCartesian(b);
+    const aCoords = HueSaturationToCartesian(a);
+    const bCoords = HueSaturationToCartesian(b);
 
-    let cCoords = MathHelper.LerpCoord(aCoords, bCoords, t);
+    const cCoords = MathHelper.LerpCoord(aCoords, bCoords, t);
+    const hsv = CartesianToHueSaturation(cCoords);
 
-    return CartesianToHueSaturation(cCoords);
+    hsv.v = MathHelper.Lerp(a.v, b.v, t);
+    return hsv;
 }
 
 /**
@@ -21,19 +24,19 @@ export function HsvLerp(a: Hsv, b: Hsv, t: number): Hsv {
  * x/y values ranging from -100 to 100. A saturation of 0 is located at the origin).
  * @param hsv Colour to convert
  */
-export function HueSaturationToCartesian(hsv: Hsv): HsvHelper {
-    let alpha = MathHelper.DegToRad(hsv.h);
-    let x = Math.sin(alpha) * hsv.s;
-    let y = Math.cos(alpha) * hsv.s;
+export function HueSaturationToCartesian(hsv: Hsv): Coord {
+    const alpha = MathHelper.DegToRad(hsv.h);
+    const x = Math.sin(alpha) * hsv.s;
+    const y = Math.cos(alpha) * hsv.s;
 
-    return new HsvHelper(x, y);
+    return new Coord(x, y);
 }
 
-export function CartesianToHueSaturation(coord: HsvHelper): Hsv {
+export function CartesianToHueSaturation(coord: Coord): Hsv {
     let saturation = Math.sqrt((coord.x ** 2) + (coord.y ** 2));
 
-    if (saturation == 0) return new Hsv(0, 0);
-    
+    if (saturation == 0) return new Hsv(0, 0, 0);
+
     let alpha = Math.asin(coord.x / saturation);
 
     // alpha will be correct for angles ranging from -90 to 90 degrees (i.e. when y >= 0). This is because 45d and 135d for example have the same value
@@ -49,15 +52,5 @@ export function CartesianToHueSaturation(coord: HsvHelper): Hsv {
     hue = MathHelper.NormaliseDeg(hue);
     saturation = MathHelper.Round(saturation, 10);
 
-    return new Hsv(hue, saturation);
-}
-
-export class Hsv {
-    public h: number;
-    public s: number;
-
-    constructor(h: number, s: number) {
-        this.h = h;
-        this.s = s;
-    }
+    return new Hsv(hue, saturation, 0);
 }

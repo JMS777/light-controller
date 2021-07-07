@@ -1,9 +1,6 @@
-declare module 'colorsys' {
-    export function hsv2Rgb(h: number, s: number, v: number): ColorRgb;
+import Rgb from "../models/Rgb";
 
-    export class ColorRgb {
-        r: number;
-        g: number;
-        b: number;
-    }
+declare module 'colorsys' {
+    export function hsv2Rgb(h: number, s: number, v: number): Rgb;
+    export function rgb_to_hsv(rgb: Rgb): Hsv;
 }

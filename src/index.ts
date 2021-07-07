@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import JsonDeviceManager from "./services/JsonDeviceManager";
 import IDeviceManager from "./services/IDeviceManager";
 import { IDimmableLight, ILight, IRgbLight, IAddressableRgbLight } from "./devices/Abstract/IVirtualLights";
+import Hsv from "./models/Hsv";
 
 // initialise configuration.
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -25,7 +26,7 @@ if (deviceFilename) {
     console.log(`Devices file: '${deviceFilename}'`);
     deviceManager = new JsonDeviceManager(path.join(__dirname, deviceFilename));
     deviceManager.loadDevices((devices) => {
-        console.log(`Loaded ${devices.length} devices.`)
+        console.log(`Loaded ${devices.length} devices.`);
     });
     
 } else {
@@ -346,7 +347,7 @@ app.put('/api/v2/lights/pixels/:id', (req, res) => {
     const device = deviceManager?.getDevice<IAddressableRgbLight>(id);
 
     if (device) {
-        device.setPixels(req.body.pixels)
+        device.setPixels(req.body.pixels);
         return res.status(200).send({
             success: 'true',
             message: 'Light updated'
@@ -374,7 +375,7 @@ app.get('/api/v2/effects/:id', (req, res) => {
 
     if (device) {
 
-        let effects: string[] = [];
+        const effects: string[] = [];
         device.getEffects().forEach(eff => effects.push(eff.id));
         
         return res.status(200).send(effects);
@@ -412,6 +413,155 @@ app.put('/api/v2/effects/:id', (req, res) => {
             success: 'true',
             message: 'Light updated'
         });
+    } else {
+        return res.status(500).send({
+            success: 'false',
+            message: 'Light does not exist'
+        });
+    }
+});
+
+// PUT /api/v3/lights/{id}
+app.put('/api/v3/lights/:id', (req, res) => {
+    const id = parseInt(req.params.id);
+
+    if (id == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'id required'
+        });
+    }
+
+    const device = deviceManager?.getDevice<IAddressableRgbLight>(id);
+
+    if (device) {
+        const colours: Hsv[] = req.body.colours;
+        const interpolationType: string = req.body.interpolation;
+        device.setColours(colours, interpolationType);
+        return res.status(200).send({
+            success: 'true',
+            message: 'Light updated'
+        });
+    } else {
+        return res.status(500).send({
+            success: 'false',
+            message: 'Light does not exist'
+        });
+    }
+});
+
+// GET /api/v3/lights/{id}/presets
+app.get('/api/v3/lights/:id/presets', (req, res) => {
+    const id = parseInt(req.params.id);
+
+    if (id == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'id required'
+        });
+    }
+
+    const device = deviceManager?.getDevice<IAddressableRgbLight>(id);
+
+    if (device) {
+        const presets = device.getPresets();
+        return res.status(200).send(presets);
+    } else {
+        return res.status(500).send({
+            success: 'false',
+            message: 'Light does not exist'
+        });
+    }
+});
+
+// PUT /api/v3/lights/{id}/presets
+app.put('/api/v3/lights/:id/presets/save', (req, res) => {
+    const id = parseInt(req.params.id);
+    const name = req.body.name;
+
+    if (id == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'id required'
+        });
+    }
+
+    if (name == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'name required'
+        });
+    }
+
+    const device = deviceManager?.getDevice<IAddressableRgbLight>(id);
+
+    if (device) {
+        const presets = device.savePreset(name);
+        return res.status(200).send(presets);
+    } else {
+        return res.status(500).send({
+            success: 'false',
+            message: 'Light does not exist'
+        });
+    }
+});
+
+// DELETE /api/v3/lights/{id}/presets
+app.delete('/api/v3/lights/:id/presets/delete', (req, res) => {
+    const id = parseInt(req.params.id);
+    const name = req.body.name;
+
+    if (id == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'id required'
+        });
+    }
+
+    if (name == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'name required'
+        });
+    }
+
+    const device = deviceManager?.getDevice<IAddressableRgbLight>(id);
+
+    if (device) {
+        const presets = device.deletePreset(name);
+        return res.status(200).send(presets);
+    } else {
+        return res.status(500).send({
+            success: 'false',
+            message: 'Light does not exist'
+        });
+    }
+});
+
+// PUT /api/v3/lights/{id}/presets
+app.put('/api/v3/lights/:id/presets', (req, res) => {
+    const id = parseInt(req.params.id);
+    const name = req.body.name;
+
+    if (id == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'id required'
+        });
+    }
+
+    if (name == undefined) {
+        return res.status(400).send({
+            success: 'false',
+            message: 'name required'
+        });
+    }
+
+    const device = deviceManager?.getDevice<IAddressableRgbLight>(id);
+
+    if (device) {
+        const presets = device.loadPreset(name);
+        return res.status(200).send(presets);
     } else {
         return res.status(500).send({
             success: 'false',

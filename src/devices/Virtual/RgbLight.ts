@@ -8,6 +8,7 @@ import { Rainbow } from "../../models/Effects/LightingEffects";
 import { IRgbLight } from "../Abstract/IVirtualLights";
 import { constrain } from "../../helpers/MathHelper";
 import { IPhysicalDevice } from "../Abstract/IPhysicalDevice";
+import Hsv from "../../models/Hsv";
 
 export default class RgbLight extends DimmableLight implements IRgbLight {
     type: DeviceType = DeviceType.RgbLight;
@@ -81,18 +82,18 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
     }
 
     async setColourAsync(targetHue: number, targetSaturation: number, token: CancellationToken): Promise<void> {
-        let aHsv = { h: this.hue, s: this.saturation };
-        let bHsv = { h: targetHue, s: targetSaturation };
+        const aHsv = new Hsv(this.hue, this.saturation, 0);
+        const bHsv = new Hsv(targetHue, targetSaturation, 0);
 
         for (let i = 1; i <= this.STEPS; i++) {
             if (token.isCancellationRequested) {
                 break;
             }
 
-            let newHsv = hsvHelper.HsvLerp(aHsv, bHsv, i / this.STEPS);
+            const newHsv = hsvHelper.HsvLerp(aHsv, bHsv, i / this.STEPS);
 
-            this.hue = newHsv.h
-            this.saturation = newHsv.s
+            this.hue = newHsv.h;
+            this.saturation = newHsv.s;
 
             this.updateChannels();
             await delay(this.FADE_TIME / this.STEPS);
@@ -100,7 +101,7 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
     }
 
     public getEffects(): Effect[] {
-        let effects = super.getEffects();
+        const effects = super.getEffects();
         effects.push(
             new Rainbow()
         );
@@ -109,7 +110,7 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
     }
 
     setEffect(effectName: string): boolean {
-        let effect = this.CreateEffect(effectName);
+        const effect = this.CreateEffect(effectName);
 
         if (effect?.affectsColour ?? true) {
             this.currentColourToken?.cancel();
@@ -118,7 +119,7 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
         return super.setEffect(effectName);
     }
 
-    getProperties() {
+    getProperties(): any {
         const properties: any = super.getProperties();
         properties.hsv = {
             h: this.hue,
@@ -129,7 +130,7 @@ export default class RgbLight extends DimmableLight implements IRgbLight {
         return properties;
     }
 
-    updateChannels() {
+    updateChannels(): void {
         const properties = {
             hue: this.hue,
             saturation: this.saturation,

@@ -2,19 +2,21 @@
 ## Overview
 Provides a Web API interface for controlling devices attached to the GPIO pins on the Raspberry Pi.
 
-Currently 3 types of light are supported:
--   light-basic
--   light-dimmable
--   light-rgb
+Currently 4 types of light are supported:
+-   light-basic (simple on/off)
+-   light-dimmable (Single channel PWM light)
+-   light-rgb (RGB Channel PWM light)
+-   light-ws2812b (Addressable LED Light Strip (WS2812B chip))
 
 ## Run as service (Raspberry Pi - systemctl)
 Run the following commands to register the service with systemd so allow it to start with the OS:
 
 ``` bash
+# Create a symbolic link between the service definition and the systemd folder.
 sudo ln -s /usr/lib/node_modules/@jms777/light-controller/install/light-controller.service /etc/systemd/system/
 
+# Register then start then service
 sudo systemctl enable light-controller.service
-
 sudo systemctl start light-controller.service
 ```
 
@@ -50,6 +52,14 @@ The device file should follow this format of this example:
                 "red": 3,
                 "green": 4,
                 "blue": 5
+            }
+        },
+        {
+            "id": 4,
+            "type": "light-ws2812b",
+            "physicalInfo": {
+                "pin": 18, // Allowed values are 10, 12, 18 and 21
+                "pixelCount": 100 // The number of LEDs on your LED strip
             }
         }
     ]
@@ -167,5 +177,20 @@ request.body: {
 response.body: {
     "success": boolean,
     "message": string
+}
+```
+
+### General Purpose **(WIP)** - WS2812B only
+Currently includes more advanced colour selection, which will automatically apply a gradient across the strip if mulitple colours are supplied.
+``` json
+PUT /api/v3/lights/{id}
+
+request.body: {
+    "colours": [ // Colour and brightness of the light, include multiple colours to add a gradient effect.
+        { "h": 360, "s": 100, "v": 100 },
+        { "h": 120, "s": 100, "v": 100 },
+        { "h": 240, "s": 100, "v": 100 }
+    ],
+    "animation": null // NOT YET IMPLEMENTED (Possible future feature) - Values: null / "scroll" / "bounce" / "random" - (Randomly pick out of the available colours. Maybe include a segment size to break the LED strip into segments)
 }
 ```

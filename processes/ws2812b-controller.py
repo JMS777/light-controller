@@ -1,9 +1,9 @@
-import zerorpc
 import board
 import neopixel
 import time
 import multiprocessing
-
+import sys
+import json
 
 def wheel(pos):
     if pos < 0 or pos > 255:
@@ -106,32 +106,58 @@ class LEDStrip:
                                   ['g'], pixels[i]['b'])
         self.pixels.show()
 
+def TurnOn():
+    ledStrip.turnOn()
 
-class Controller(object):
-    def TurnOn(self):
-        ledStrip.turnOn()
+def TurnOff():
+    ledStrip.turnOff()
 
-    def TurnOff(self):
-        ledStrip.turnOff()
+def SetColour(colour):
+    ledStrip.setColour((colour['r'], colour['g'], colour['b']))
 
-    def SetColour(self, colour):
-        ledStrip.setColour((colour['r'], colour['g'], colour['b']))
+def SetEffect(effectName):
+    ledStrip.setEffect(effectName)
 
-    def SetEffect(self, effectName):
-        ledStrip.setEffect(effectName)
+def GetPixelCount():
+    return ledStrip.num_pixels
 
-    def GetPixelCount(self):
-        return ledStrip.num_pixels
+def GetEffects():
+    return ledStrip.effects
 
-    def GetEffects(self):
-        return ledStrip.effects
+def SetPixels(pixels):
+    ledStrip.setPixels(pixels)
 
-    def SetPixels(self, pixels):
-        ledStrip.setPixels(pixels)
+def ProcessCommand(line):
+    data = json.loads(line)
+    command = data['command']
+    args = data['args']
 
+    if command == 'TurnOn':
+        TurnOn()
+    elif command == 'TurnOff':
+        TurnOff()
+    if command == 'SetColour':
+        SetColour(args['colour'])
+    elif command == 'SetPixels':
+        SetPixels(args['pixels'])
+    elif command == 'SetEffect':
+        SetEffect(args['effect'])
 
-ledStrip = LEDStrip(96, board.D18)
-ledStrip.turnOff()
-server = zerorpc.Server(Controller())
-server.bind("tcp://0.0.0.0:8347")
-server.run()
+def GetBoardPin(pinRef):
+    if pinRef == "10":
+        return board.D10
+    elif pinRef == "12":
+        return board.D12
+    elif pinRef == "18":
+        return board.D18
+    elif pinRef == "21":
+        return board.D21
+
+if __name__ == "__main__":
+    pin = GetBoardPin(sys.argv[1])
+    ledCount = int(sys.argv[2])
+    ledStrip = LEDStrip(ledCount, pin)
+    ledStrip.turnOff()
+    for line in sys.stdin:
+        ProcessCommand(line)
+

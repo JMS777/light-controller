@@ -21,7 +21,7 @@ export default abstract class Effect {
         this.work = this.doWork(device, this.cst);
     }
 
-    public async cancel(immediate: boolean = false, callback?: () => any) {
+    public async cancel(immediate = false, callback?: () => any): Promise<void> {
         this.cst?.cancel(immediate);
 
         await this.work;
@@ -34,8 +34,8 @@ export default abstract class Effect {
 }
 
 export class ExternalEffect extends Effect {
-    public affectsBrightness: boolean = true;
-    public affectsColour: boolean = true;
+    public affectsBrightness = true;
+    public affectsColour = true;
 
     protected async doWork(device: VirtualDevice, cst: CancellationToken): Promise<void> {
 
@@ -44,8 +44,8 @@ export class ExternalEffect extends Effect {
 }
 
 export class NoEffect extends Effect {
-    public affectsBrightness: boolean = false;
-    public affectsColour: boolean = false;
+    public affectsBrightness = false;
+    public affectsColour = false;
 
     constructor() {
         super("No Effect");

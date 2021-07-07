@@ -1,3 +1,5 @@
+import { Animations } from "src/models/Animations";
+import Hsv from "../../models/Hsv";
 import Rgb from "../../models/Rgb";
 import VirtualDevice from "./VirtualDevice";
 
@@ -27,4 +29,10 @@ export interface IAddressableRgbLight extends IRgbLight {
     pixels: Rgb[];
 
     setPixels(pixels: Rgb[]): void;
+    setColours(colours: Hsv[], interpolationType: string): void;
+    setAnimation(animation: Animations): void;
+    getPresets(): string[];
+    savePreset(name: string): void;
+    loadPreset(name: string): void;
+    deletePreset(name: string): void;
 }

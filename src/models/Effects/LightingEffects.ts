@@ -1,11 +1,11 @@
 import { IDimmableLight, IRgbLight } from "../../devices/Abstract/IVirtualLights";
 import { delay } from "../../helpers/AsyncHelpers";
-import CancellationToken from "../../helpers/CancellationToken"
-import Effect from "./Effect"
+import CancellationToken from "../../helpers/CancellationToken";
+import Effect from "./Effect";
 
 export class Blink extends Effect {
-    public affectsBrightness: boolean = true;
-    public affectsColour: boolean = false;
+    public affectsBrightness = true;
+    public affectsColour = false;
 
     constructor() {
         super("Blink");
@@ -14,7 +14,7 @@ export class Blink extends Effect {
     protected async doWork(device: IDimmableLight, cst: CancellationToken): Promise<void> {
         device.setState(true);
         
-        let originalBrightness = device.brightness;
+        const originalBrightness = device.brightness;
         
         while (!cst.isCancellationRequested) {
             device.setBrightness(100);
@@ -33,8 +33,8 @@ export class Blink extends Effect {
 }
 
 export class Pulse extends Effect {
-    public affectsBrightness: boolean = true;
-    public affectsColour: boolean = false;
+    public affectsBrightness = true;
+    public affectsColour = false;
 
     private PULSE_DELAY = (2.0 / 100.0) * 1000;
 
@@ -45,12 +45,12 @@ export class Pulse extends Effect {
     protected async doWork(device: IDimmableLight, cst: CancellationToken): Promise<void> {
         device.setState(true);
 
-        let originalBrightness = device.brightness;
+        const originalBrightness = device.brightness;
         let direction = 1;
 
         while (!cst.isCancellationRequested) {
             if (direction > 0 && device.brightness >= 100) {
-                direction = -1
+                direction = -1;
             } else if (direction < 0 && device.brightness <= 0) {
                 direction = 1;
             }
@@ -67,8 +67,8 @@ export class Pulse extends Effect {
 }
 
 export class Rainbow extends Effect {
-    public affectsBrightness: boolean = false;
-    public affectsColour: boolean = true;
+    public affectsBrightness = false;
+    public affectsColour = true;
 
     private HUE_DELAY = (10.0 / 360.0) * 1000;
 
@@ -79,8 +79,8 @@ export class Rainbow extends Effect {
     protected async doWork(device: IRgbLight, cst: CancellationToken): Promise<void> {
         device.setState(true);
 
-        let originalHue = device.hue;
-        let originalSaturation = device.saturation;
+        const originalHue = device.hue;
+        const originalSaturation = device.saturation;
 
         while(!cst.isCancellationRequested && device.saturation < 100) {
             device.setColour(undefined, device.saturation + 1);
@@ -89,7 +89,7 @@ export class Rainbow extends Effect {
 
         while (!cst.isCancellationRequested) {
             if (device.hue >= 359) {
-                device.setColour(0, 100)
+                device.setColour(0, 100);
             } else {
                 device.setColour(device.hue + 1, 100);
             }

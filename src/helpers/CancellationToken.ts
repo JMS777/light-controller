@@ -8,7 +8,7 @@ export default class CancellationToken {
         this.immediate = false;
     }
 
-    cancel(immediate: boolean = false) {
+    cancel(immediate = false): void {
         this.isCancellationRequested = true;
         this.immediate = immediate;
     }

@@ -9,8 +9,8 @@ import { IPhysicalDevice } from "../Abstract/IPhysicalDevice";
 import Light from "./Light";
 
 export default class DimmableLight extends Light implements IDimmableLight {
-    protected STEPS: number = 50;
-    protected FADE_TIME: number = 500; // Milliseconds
+    protected STEPS = 50;
+    protected FADE_TIME = 500; // Milliseconds
 
     brightness = 100;
     stateTransition = this.state ? 1 : 0;
@@ -39,7 +39,7 @@ export default class DimmableLight extends Light implements IDimmableLight {
     }
 
     async setStateAsync(token: CancellationToken): Promise<void> {
-        var stateIncrement = ((this.state ? 1 : 0) - this.stateTransition) / this.STEPS;
+        const stateIncrement = ((this.state ? 1 : 0) - this.stateTransition) / this.STEPS;
 
         for (let i = 0; i < this.STEPS; i++) {
             if (token.isCancellationRequested) {
@@ -84,7 +84,7 @@ export default class DimmableLight extends Light implements IDimmableLight {
     }
 
     async setBrightnessAsync(targetBrightness: number, token: CancellationToken): Promise<void> {
-        var brightnessIncrement = (targetBrightness - this.brightness) / this.STEPS;
+        const brightnessIncrement = (targetBrightness - this.brightness) / this.STEPS;
 
         for (let i = 0; i < this.STEPS; i++) {
             if (token.isCancellationRequested) {
@@ -99,7 +99,7 @@ export default class DimmableLight extends Light implements IDimmableLight {
     }
 
     public getEffects(): Effect[] {
-        let effects = super.getEffects();
+        const effects = super.getEffects();
         effects.push(
             new Blink(),
             new Pulse()
@@ -109,7 +109,7 @@ export default class DimmableLight extends Light implements IDimmableLight {
     }
 
     setEffect(effectName: string): boolean {
-        let effect = this.CreateEffect(effectName);
+        const effect = this.CreateEffect(effectName);
 
         if (effect?.affectsBrightness ?? true) {
             this.currentBrightnessToken?.cancel(true);
@@ -118,14 +118,14 @@ export default class DimmableLight extends Light implements IDimmableLight {
         return super.setEffect(effectName);
     }
 
-    getProperties() {
+    getProperties(): any {
         const properties: any = super.getProperties();
         properties.brightness = this.brightness;
 
         return properties;
     }
 
-    updateChannels() {
+    updateChannels(): void {
         const properties = {
             brightness: this.stateTransition * (this.brightness / 100)
         };

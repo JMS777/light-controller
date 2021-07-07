@@ -17,7 +17,7 @@ export default class JsonDeviceManager implements IDeviceManager {
         return this.devices.find(d => d.id === id) as T;
     }
 
-    loadDevices(callback: (devices: VirtualDevice[]) => any) {
+    loadDevices(callback: (devices: VirtualDevice[]) => any): void {
         fs.readFile(this.filename, 'utf8', (err, data) => {
             if (err) throw err;
 
@@ -43,7 +43,7 @@ export default class JsonDeviceManager implements IDeviceManager {
                 } else {
                     console.log(`Failed to create group from: ${info}`);
                 }
-            })
+            });
 
             if (callback) {
                 callback(this.devices);
