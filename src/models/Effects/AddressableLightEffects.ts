@@ -22,6 +22,7 @@ export class Scroll extends Effect {
         while (!cst.isCancellationRequested) {
             console.log("Main loop");
             for (let j = 0; j < 255; j++) {
+                console.log("J loop");
                 if (cst.isCancellationRequested) {
                     console.log('Cancel requested, breaking (Colour)');
                     break;
