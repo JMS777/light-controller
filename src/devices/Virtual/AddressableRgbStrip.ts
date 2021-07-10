@@ -13,7 +13,7 @@ import CancellationToken from "../../helpers/CancellationToken";
 import { delay } from "../../helpers/AsyncHelpers";
 import { constrain } from "../../helpers/MathHelper";
 import { DeviceType } from "../../helpers/DeviceType";
-import { Scroll } from "src/models/Effects/AddressableLightEffects";
+import { Scroll } from "../../models/Effects/AddressableLightEffects";
 
 export default class AddressableRgbStrip extends RgbLight implements IAddressableRgbLight {
 
