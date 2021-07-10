@@ -5,7 +5,7 @@ import Rgb from "../Rgb";
 import { delay } from "../../helpers/AsyncHelpers";
 
 export class Scroll extends Effect {
-    public affectsBrightness =false;
+    public affectsBrightness = false;
     public affectsColour = true;
 
     constructor() {
@@ -21,10 +21,16 @@ export class Scroll extends Effect {
 
         while (!cst.isCancellationRequested) {
             for (let j = 0; j < 255; j++) {
-                if (cst.isCancellationRequested) break;
+                if (cst.isCancellationRequested) {
+                    console.log('Cancel requested, breaking');
+                    break;
+                }
 
                 for (let i = 0; i < device.pixelCount; i++) {
-                    if (cst.isCancellationRequested) break;
+                    if (cst.isCancellationRequested) {
+                        console.log('Cancel requested, breaking');
+                        break;
+                    }
                     const pixel_index = Math.floor(i * 256 / device.pixelCount) + j;
                     pixels[i] = this.wheel(pixel_index & 255);
                 }
@@ -44,8 +50,7 @@ export class Scroll extends Effect {
         if (pos < 0 || pos > 255) {
             return rgb;
         }
-        else if (pos < 85)
-        {
+        else if (pos < 85) {
             rgb.r = Math.floor(pos * 3);
             rgb.g = Math.floor(255 - pos * 3);
             rgb.b = 0;
