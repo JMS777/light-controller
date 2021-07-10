@@ -20,7 +20,6 @@ export class Scroll extends Effect {
         const pixels = new Array<Rgb>(device.pixelCount);
 
         while (!cst.isCancellationRequested) {
-            console.log("Main loop");
             for (let j = 0; j < 255; j++) {
                 if (cst.isCancellationRequested) {
                     console.log('Cancel requested, breaking (Colour)');
@@ -28,7 +27,6 @@ export class Scroll extends Effect {
                 }
 
                 for (let i = 0; i < device.pixelCount; i++) {
-                console.log("I loop");
                 if (cst.isCancellationRequested) {
                         console.log('Cancel requested, breaking (Pixel)');
                         break;
@@ -37,7 +35,7 @@ export class Scroll extends Effect {
                     pixels[i] = this.wheel(pixel_index & 255);
                 }
                 device.setPixels(pixels);
-                await delay(0.001);
+                await delay(0.01);
             }
         }
 
