@@ -33,7 +33,7 @@ export class Scroll extends Effect {
             }
         }
 
-        if (!this.cst?.immediate) {
+        if (!cst?.immediate) {
             await device.setPixelsSmooth(originalPixels);
         }
     }
