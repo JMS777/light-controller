@@ -20,8 +20,9 @@ export class Scroll extends Effect {
         const pixels = new Array<Rgb>(device.pixelCount);
         let j = 0;
         while (!cst.isCancellationRequested) {
+            console.log("Main effect loop");
             if (cst.isCancellationRequested) {
-                console.log('Cancel requested, breaking (Colour)');
+                console.log('Cancel requested, breaking (Main)');
                 break;
             }
 
