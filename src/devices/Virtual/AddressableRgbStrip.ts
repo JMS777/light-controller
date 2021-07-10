@@ -13,6 +13,7 @@ import CancellationToken from "../../helpers/CancellationToken";
 import { delay } from "../../helpers/AsyncHelpers";
 import { constrain } from "../../helpers/MathHelper";
 import { DeviceType } from "../../helpers/DeviceType";
+import { Scroll } from "src/models/Effects/AddressableLightEffects";
 
 export default class AddressableRgbStrip extends RgbLight implements IAddressableRgbLight {
 
@@ -136,7 +137,9 @@ export default class AddressableRgbStrip extends RgbLight implements IAddressabl
 
     getEffects(): Effect[] {
         const effects = super.getEffects();
-
+        effects.push(
+            new Scroll()
+        );
         this.effects.map(e => effects.push(new ExternalEffect(e)));
 
         return effects;
