@@ -34,7 +34,7 @@ export class Scroll extends Effect {
                 pixels[i] = this.wheel(pixel_index & 255);
             }
             device.setPixels(pixels);
-            await delay(0.01);
+            await delay(0.1);
             j = ++j % 255;
 
         }
