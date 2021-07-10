@@ -21,7 +21,10 @@ export class Scroll extends Effect {
 
         while (!cst.isCancellationRequested) {
             for (let j = 0; j < 255; j++) {
+                if (cst.isCancellationRequested) break;
+
                 for (let i = 0; i < device.pixelCount; i++) {
+                    if (cst.isCancellationRequested) break;
                     const pixel_index = Math.floor(i * 256 / device.pixelCount) + j;
                     pixels[i] = this.wheel(pixel_index & 255);
                 }
