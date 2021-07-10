@@ -23,13 +23,23 @@ export class Scroll extends Effect {
             for (let j = 0; j < 255; j++) {
                 if (cst.isCancellationRequested) {
                     console.log('Cancel requested, breaking (Colour)');
-                    break;
+
+                    if (!cst.immediate) {
+                        await device.setPixelsSmooth(originalPixels);
+                    }
+
+                    return;
                 }
 
                 for (let i = 0; i < device.pixelCount; i++) {
                 if (cst.isCancellationRequested) {
                         console.log('Cancel requested, breaking (Pixel)');
-                        break;
+
+                        if (!cst.immediate) {
+                            await device.setPixelsSmooth(originalPixels);
+                        }
+    
+                        return;
                     }
                     const pixel_index = Math.floor(i * 256 / device.pixelCount) + j;
                     pixels[i] = this.wheel(pixel_index & 255);
