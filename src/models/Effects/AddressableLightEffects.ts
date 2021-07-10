@@ -18,35 +18,25 @@ export class Scroll extends Effect {
         const originalPixels = [...device.pixels];
 
         const pixels = new Array<Rgb>(device.pixelCount);
-
+        let j = 0;
         while (!cst.isCancellationRequested) {
-            for (let j = 0; j < 255; j++) {
-                if (cst.isCancellationRequested) {
-                    console.log('Cancel requested, breaking (Colour)');
-
-                    if (!cst.immediate) {
-                        await device.setPixelsSmooth(originalPixels);
-                    }
-
-                    return;
-                }
-
-                for (let i = 0; i < device.pixelCount; i++) {
-                if (cst.isCancellationRequested) {
-                        console.log('Cancel requested, breaking (Pixel)');
-
-                        if (!cst.immediate) {
-                            await device.setPixelsSmooth(originalPixels);
-                        }
-    
-                        return;
-                    }
-                    const pixel_index = Math.floor(i * 256 / device.pixelCount) + j;
-                    pixels[i] = this.wheel(pixel_index & 255);
-                }
-                device.setPixels(pixels);
-                await delay(0.01);
+            if (cst.isCancellationRequested) {
+                console.log('Cancel requested, breaking (Colour)');
+                break;
             }
+
+            for (let i = 0; i < device.pixelCount; i++) {
+                if (cst.isCancellationRequested) {
+                    console.log('Cancel requested, breaking (Pixel)');
+                    break;
+                }
+                const pixel_index = Math.floor(i * 256 / device.pixelCount) + j;
+                pixels[i] = this.wheel(pixel_index & 255);
+            }
+            device.setPixels(pixels);
+            await delay(0.01);
+            j = ++j % 255;
+
         }
 
         if (!cst.immediate) {
